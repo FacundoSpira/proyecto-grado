@@ -84,3 +84,34 @@ def dist(d1, d2):
 def dist_sem(c1, c2):
     return min([abs(s1 - s2) for s1, s2 in product([s for c, s, k in SUG if c == c1], [s for c, s, k in SUG if c == c2])])
 
+x = pl.LpVariable.dicts("x", (C, D, T), cat=pl.LpBinary)
+
+for c in C:
+    problem += pl.lpSum(x[c][d][t] for d in D for t in T(d)) == 1, f"AsignacionUnica_{c}"
+
+for d in D:
+    for (c1, s, k) in SUG:
+        for (c2, s2, k2) in SUG:
+            if c1 != c2 and s == s2 and k == k2:
+                problem += pl.lpSum(x[c1][d][t] + x[c2][d][t] for t in T(d)) <= 1, f"Dias_Distintos_{c1}_{c2}_Dia_{d}"
+
+for d in D:
+    for t in T(d):
+        problem += pl.lpSum(ins[c] * x[c][d][t] for c in C) <= cp[d,t] * fac_cp, f"Capacidad_{d}_{t}"
+
+for c,d,t in PA:
+    problem += x[c][d][t] == 1, f"Pre_asignacion_{c}_{d}_{t}"
+
+y = pl.LpVariable.dicts("y", (C, D, C, D), cat="Binary")
+
+for c1, c2 in product(C, repeat=2):
+    for d1, d2 in product(D, repeat=2):
+        problem += y[c1][d1][c2][d2] <= pl.lpSum(x[c1][d1][t1]) for t1 in T), f"Restriccion_y_r1_{c1}_{d1}_{c2}_{d2}"
+
+for c1, c2 in product(C, repeat=2):
+    for d1, d2 in product(D, repeat=2):
+        problem += y[c1][d1][c2][d2] <= pl.lpSum(x[c2][d2][t2]) for t2 in T), f"Restriccion_y_r2_{c1}_{d1}_{c2}_{d2}"
+
+for c1, c2 in product(C, repeate=2):
+    for d1, d2 in product(D, repeate=2):
+        problem += y[c1][d1][c2][d2] >= pl.lpSum(X[c1][d1][t1] for t1 in T) + pl.lpSum(x[c2][d2][t2] for t2 in T) - 1, f"Restriccion_y_r3_{c1}_{d1}_{c2}_{d2}"
