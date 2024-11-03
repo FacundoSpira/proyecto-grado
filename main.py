@@ -9,7 +9,7 @@ start = timer()
 
 # ==== CONJUNTOS ====
 
-D = [1, 2, 4]  # conjunto de días del calendario
+D = [1, 2, 3]  # conjunto de días del calendario
 
 C = [
     "cDiv",
@@ -46,14 +46,15 @@ SUG = [
     ("pye", 3, "computacion"),
     ("md1", 3, "computacion"),
     ("md2", 4, "computacion"),
-    ("p1", 4, "computacion"),
+    ("p1", 1, "computacion"),
     ("p2", 5, "computacion"),
     ("tProg", 5, "computacion"),
 ]  # conjunto de triplas donde la unidad curricular c se sugiere en el semestre s para la carrera k
 
-PA = (
-    []
-)  # conjunto de triplas donde la unidad curricular c se asigna en el dia d en el turno t
+PA = {
+    "cDiv": [(2, 1), (2, 2)],
+    "gal1": [(1, 1), (2, 1), (3, 1)],
+}  # conjunto que a cada curso C le asigna los posibles días y turnos en los que se puede asignar.
 
 P = [
     ("cDiv", "cDivv"),
@@ -87,7 +88,7 @@ ins = {
     "cDiv": 50,
     "gal1": 50,
     "cDivv": 40,
-    "gal2": 20,
+    "gal2": 35,
     "pye": 50,
     "md1": 40,
     "md2": 20,
@@ -198,8 +199,8 @@ for d in D:
         )
 
 # Las evaluaciones que se pre-asignan a un día y turno, se asignan en ese día y turno.
-for c, d, t in PA:
-    problem += x[c][d][t] == 1, f"Pre_asignacion_{c}_{d}_{t}"
+for c in PA.keys():
+    problem += (pl.lpSum(x[c][d][t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
 
 # Garantiza el valor correcto de y. Es decir, asegura que y_{c_1,c_2,d_1,d_2} valga 1 si y solamente si las x correspondientes valen 1. Para esto se aplican 3 restricciones.
 for c1, c2 in PARES_CURSOS:
