@@ -1,4 +1,4 @@
-from itertools import combinations, product
+from itertools import combinations
 from timeit import default_timer as timer
 
 import pulp as pl
@@ -62,9 +62,10 @@ P = [
     ("gal2", "p1"),
 ]  # conjunto de pares de UC donde la UC 1 es previa de la UC 2
 
-# Pares de conjuntos frecuentes
-PARES_CURSOS = list(combinations(C, 2))  # Esto genera (c1,c2) donde c1 < c2
-PARES_DIAS = list(product(D, D))
+# Pares de conjuntos frecuentes para evitar re-calculos
+PARES_DIAS = [(d1, d2) for d1 in D for d2 in D]
+# De esta forma evitamos pares duplicados y pares del tipo (c, c), reduciendo asi la cantidad de variables y.
+PARES_CURSOS = list(combinations(C, 2))
 
 # Diccionario de búsqueda para cursos en el mismo semetre
 cursos_mismo_semestre = {
