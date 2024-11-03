@@ -65,7 +65,6 @@ P = [
 # Pares de conjuntos frecuentes
 PARES_CURSOS = list(combinations(C, 2))  # Esto genera (c1,c2) donde c1 < c2
 PARES_DIAS = list(product(D, D))
-PARES_DIA_TURNO = [(d, t) for d in D for t in Td[d]]
 
 # Diccionario de búsqueda para cursos en el mismo semetre
 cursos_mismo_semestre = {
@@ -77,7 +76,9 @@ cursos_mismo_semestre = {
 
 # ==== PARÁMETROS ====
 
-cp = {(d, t): 70 for d, t in PARES_DIA_TURNO}  # capacidad total del día d en el turno t
+cp = {
+    (d, t): 70 for d, t in [(d, t) for d in D for t in Td[d]]
+}  # capacidad total del día d en el turno t
 
 fac_cp = 1  # porcentaje que se decide usar de la capacidad
 
@@ -107,7 +108,7 @@ def dist(d1, d2):
 
 
 # Distancia en semestres entre las unidades curriculares c1 y c2
-def dist_sem(c1, c2):
+def get_dist_sem(c1, c2):
     # Encuentra las carreras en las que ambos cursos están sugeridos
     careers_in_common = [
         k
@@ -133,7 +134,7 @@ def dist_sem(c1, c2):
 
 
 # Precalcula la distancia en semestres entre todas las UC
-DIST_SEM = {(c1, c2): dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
+dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
 
 # ==== VARIABLES DE DECISIÓN ====
 
@@ -154,25 +155,17 @@ problem = pl.LpProblem("Optimizacion_Calendario", pl.LpMinimize)
 # Valor máximo de concurrencia entre UC diferentes. Se utiliza para normalizar la concurrencia entre dos UC.
 max_co = max(co[c1, c2] for c1, c2 in co if c1 != c2) + 1
 
-
-def get_y(c1, d1, c2, d2):
-    if (c1, d1, c2, d2) in y:
-        return y[c1, d1, c2, d2]
-    return y[c2, d2, c1, d1]
-
-
 problem += pl.lpSum(
     (1 / (dist(d1, d2) + 1))
     * (
         pl.lpSum(
-            (co[c1, c2] / max_co + 1 / (DIST_SEM[c1, c2] + 1)) * get_y(c1, d1, c2, d2)
+            (co[c1, c2] / max_co + 1 / (dist_sem[c1, c2] + 1)) * y[c1, d1, c2, d2]
             for c1, c2 in PARES_CURSOS
             if c1 != c2
         )
         - pl.lpSum(
-            get_y(c1, d1, c2, d2)
+            (y[c1, d1, c2, d2] if (c1, d1, c2, d2) in y else y[c2, d2, c1, d1])
             for c1, c2 in P
-            if (c1, c2) in PARES_CURSOS or (c2, c1) in PARES_CURSOS
         )
     )
     for d1, d2 in PARES_DIAS
@@ -211,17 +204,17 @@ for c, d, t in PA:
 for c1, c2 in PARES_CURSOS:
     for d1, d2 in PARES_DIAS:
         problem += (
-            get_y(c1, d1, c2, d2) <= pl.lpSum(x[c1][d1][t1] for t1 in Td[d1]),
+            y[c1, d1, c2, d2] <= pl.lpSum(x[c1][d1][t1] for t1 in Td[d1]),
             f"Restriccion_y_r1_{c1}_{d1}_{c2}_{d2}",
         )
 
         problem += (
-            get_y(c1, d1, c2, d2) <= pl.lpSum(x[c2][d2][t2] for t2 in Td[d2]),
+            y[c1, d1, c2, d2] <= pl.lpSum(x[c2][d2][t2] for t2 in Td[d2]),
             f"Restriccion_y_r2_{c1}_{d1}_{c2}_{d2}",
         )
 
         problem += (
-            get_y(c1, d1, c2, d2)
+            y[c1, d1, c2, d2]
             >= pl.lpSum(x[c1][d1][t1] for t1 in Td[d1])
             + pl.lpSum(x[c2][d2][t2] for t2 in Td[d2])
             - 1,
