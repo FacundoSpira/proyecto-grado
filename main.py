@@ -4,102 +4,103 @@ from timeit import default_timer as timer
 import pulp as pl
 
 from variables_to_csv import create_schedule_csv
+from csv_data_to_model_data import cargar_datos_calendario
 
 start = timer()
 
-# ==== CONJUNTOS ====
+# # ==== CONJUNTOS ====
 
-D = [1, 2, 3]  # conjunto de días del calendario
+# D = [1, 2, 3]  # conjunto de días del calendario
 
-C = [
-    "cDiv",
-    "gal1",
-    "cDivv",
-    "gal2",
-    "pye",
-    "md1",
-    "md2",
-    "p1",
-    "p2",
-    "tProg",
-]  # conjunto de unidades curriculares
+# C = [
+#     "cDiv",
+#     "gal1",
+#     "cDivv",
+#     "gal2",
+#     "pye",
+#     "md1",
+#     "md2",
+#     "p1",
+#     "p2",
+#     "tProg",
+# ]  # conjunto de unidades curriculares
 
-T = [1, 2, 3]  # conjunto de turnos
+# T = [1, 2, 3]  # conjunto de turnos
 
-Td = {d: [1, 2] if d == 3 else T for d in D}  # conjunto de turnos para el día d
+# Td = {d: [1, 2] if d == 3 else T for d in D}  # conjunto de turnos para el día d
 
-S = [
-    1,
-    2,
-    3,
-    4,
-    5,
-]  # conjunto de semestres. Cada semestre representa una altura de la carrera que la unidad curricular puede ser sugerida
+# S = [
+#     1,
+#     2,
+#     3,
+#     4,
+#     5,
+# ]  # conjunto de semestres. Cada semestre representa una altura de la carrera que la unidad curricular puede ser sugerida
 
-K = ["computacion"]  # conjunto de carreras
+# K = ["computacion"]  # conjunto de carreras
 
-SUG = [
-    ("cDiv", 1, "computacion"),
-    ("gal1", 1, "computacion"),
-    ("cDivv", 2, "computacion"),
-    ("gal2", 2, "computacion"),
-    ("pye", 3, "computacion"),
-    ("md1", 3, "computacion"),
-    ("md2", 4, "computacion"),
-    ("p1", 1, "computacion"),
-    ("p2", 5, "computacion"),
-    ("tProg", 5, "computacion"),
-]  # conjunto de triplas donde la unidad curricular c se sugiere en el semestre s para la carrera k
+# SUG = [
+#     ("cDiv", 1, "computacion"),
+#     ("gal1", 1, "computacion"),
+#     ("cDivv", 2, "computacion"),
+#     ("gal2", 2, "computacion"),
+#     ("pye", 3, "computacion"),
+#     ("md1", 3, "computacion"),
+#     ("md2", 4, "computacion"),
+#     ("p1", 1, "computacion"),
+#     ("p2", 5, "computacion"),
+#     ("tProg", 5, "computacion"),
+# ]  # conjunto de triplas donde la unidad curricular c se sugiere en el semestre s para la carrera k
 
-PA = {
-    "cDiv": [(2, 1), (2, 2)],
-    "gal1": [(1, 1), (2, 1), (3, 1)],
-}  # conjunto que a cada curso C le asigna los posibles días y turnos en los que se puede asignar.
+# PA = {
+#     "cDiv": [(2, 1), (2, 2)],
+#     "gal1": [(1, 1), (2, 1), (3, 1)],
+# }  # conjunto que a cada curso C le asigna los posibles días y turnos en los que se puede asignar.
 
-P = [
-    ("cDiv", "cDivv"),
-    ("gal1", "gal2"),
-    ("cDivv", "pye"),
-    ("gal2", "p1"),
-]  # conjunto de pares de UC donde la UC 1 es previa de la UC 2
+# P = [
+#     ("cDiv", "cDivv"),
+#     ("gal1", "gal2"),
+#     ("cDivv", "pye"),
+#     ("gal2", "p1"),
+# ]  # conjunto de pares de UC donde la UC 1 es previa de la UC 2
 
-# Pares de conjuntos frecuentes para evitar re-calculos
-PARES_DIAS = [(d1, d2) for d1 in D for d2 in D]
-# De esta forma evitamos pares duplicados y pares del tipo (c, c), reduciendo asi la cantidad de variables y.
-PARES_CURSOS = list(combinations(C, 2))
+# # Pares de conjuntos frecuentes para evitar re-calculos
+# PARES_DIAS = [(d1, d2) for d1 in D for d2 in D]
+# # De esta forma evitamos pares duplicados y pares del tipo (c, c), reduciendo asi la cantidad de variables y.
+# PARES_CURSOS = list(combinations(C, 2))
 
-# Diccionario de búsqueda para cursos en el mismo semetre
-cursos_mismo_semestre = {
-    (c1, c2): True
-    for (c1, s1, k1) in SUG
-    for (c2, s2, k2) in SUG
-    if c1 != c2 and s1 == s2 and k1 == k2
-}
+# # Diccionario de búsqueda para cursos en el mismo semetre
+# cursos_mismo_semestre = {
+#     (c1, c2): True
+#     for (c1, s1, k1) in SUG
+#     for (c2, s2, k2) in SUG
+#     if c1 != c2 and s1 == s2 and k1 == k2
+# }
 
-# ==== PARÁMETROS ====
+# # ==== PARÁMETROS ====
 
-cp = {
-    (d, t): 70 for d, t in [(d, t) for d in D for t in Td[d]]
-}  # capacidad total del día d en el turno t
+# cp = {
+#     (d, t): 70 for d, t in [(d, t) for d in D for t in Td[d]]
+# }  # capacidad total del día d en el turno t
 
-fac_cp = 1  # porcentaje que se decide usar de la capacidad
+# fac_cp = 1  # porcentaje que se decide usar de la capacidad
 
-ins = {
-    "cDiv": 50,
-    "gal1": 50,
-    "cDivv": 40,
-    "gal2": 35,
-    "pye": 50,
-    "md1": 40,
-    "md2": 20,
-    "p1": 20,
-    "p2": 15,
-    "tProg": 15,
-}  # cantidad de inscriptos en la unidad curricular c
+# ins = {
+#     "cDiv": 50,
+#     "gal1": 50,
+#     "cDivv": 40,
+#     "gal2": 35,
+#     "pye": 50,
+#     "md1": 40,
+#     "md2": 20,
+#     "p1": 20,
+#     "p2": 15,
+#     "tProg": 15,
+# }  # cantidad de inscriptos en la unidad curricular c
 
-co = {
-    (c1, c2): 0 if c1 != c2 else ins[c1] for c1, c2 in PARES_CURSOS
-}  # cantidad de estudiantes incriptos en simultáneo en las UC c1 y c2
+# co = {
+#     (c1, c2): 0 if c1 != c2 else ins[c1] for c1, c2 in PARES_CURSOS
+# }  # cantidad de estudiantes incriptos en simultáneo en las UC c1 y c2
 
 # ==== FUNCIONES AUXILIARES ====
 
@@ -109,34 +110,55 @@ def dist(d1, d2):
     return abs(d1 - d2)
 
 
-# Distancia en semestres entre las unidades curriculares c1 y c2
-def get_dist_sem(c1, c2):
-    # Encuentra las carreras en las que ambos cursos están sugeridos
-    careers_in_common = [
-        k
-        for (_, _, k) in SUG
-        if any((c1, s1, k) in SUG for s1 in S) and any((c2, s2, k) in SUG for s2 in S)
-    ]
+# # Distancia en semestres entre las unidades curriculares c1 y c2
+# def get_dist_sem(c1, c2):
+#     # Encuentra las carreras en las que ambos cursos están sugeridos
+#     careers_in_common = [
+#         k
+#         for (_, _, k) in SUG
+#         if any((c1, s1, k) in SUG for s1 in S) and any((c2, s2, k) in SUG for s2 in S)
+#     ]
 
-    # Calcula la distancia mínima en semestres para las carreras en común
-    if careers_in_common:
-        distances = []
-        for k in careers_in_common:
-            semester_c1 = [s for c, s, kk in SUG if c == c1 and kk == k][0]
-            semester_c2 = [s for c, s, kk in SUG if c == c2 and kk == k][0]
+#     # Calcula la distancia mínima en semestres para las carreras en común
+#     if careers_in_common:
+#         distances = []
+#         for k in careers_in_common:
+#             semester_c1 = [s for c, s, kk in SUG if c == c1 and kk == k][0]
+#             semester_c2 = [s for c, s, kk in SUG if c == c2 and kk == k][0]
 
-            # Calcula la distancia mínima para la carrera k específica
-            distances.append(abs(semester_c1 - semester_c2))
+#             # Calcula la distancia mínima para la carrera k específica
+#             distances.append(abs(semester_c1 - semester_c2))
 
-        # Retorna la mínima distancia encontrada entre las carreras comunes
-        return min(distances)
-    else:
-        # Devuelve |S| si no hay carreras en común entre c1 y c2
-        return len(S)
+#         # Retorna la mínima distancia encontrada entre las carreras comunes
+#         return min(distances)
+#     else:
+#         # Devuelve |S| si no hay carreras en común entre c1 y c2
+#         return len(S)
 
 
-# Precalcula la distancia en semestres entre todas las UC
-dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
+# # Precalcula la distancia en semestres entre todas las UC
+# dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
+
+datos = cargar_datos_calendario("caso2")
+
+D = datos.get("D")
+C = datos.get("C")
+T = datos.get("T")
+Td = datos.get("Td")
+S = datos.get("S")
+K = datos.get("K")
+SUG = datos.get("SUG")
+PA = datos.get("PA")
+P = datos.get("P")
+PARES_DIAS = datos.get("PARES_DIAS")
+PARES_CURSOS = datos.get("PARES_CURSOS")
+cursos_mismo_semestre = datos.get("cursos_mismo_semestre")
+cp = datos.get("cp")
+fac_cp = datos.get("fac_cp")
+ins = datos.get("ins")
+co = datos.get("co")
+dist_sem = datos.get("dist_sem")
+
 
 # ==== VARIABLES DE DECISIÓN ====
 
@@ -226,9 +248,10 @@ for c1, c2 in PARES_CURSOS:
 # ==== SOLUCIÓN ====
 solver = pl.PULP_CBC_CMD(
     threads=12,
-    msg=1,  # Mostrar output para debug
-    timeLimit=3600,  # Límite de tiempo de 1 hora
-    gapRel=0.05,  # Gap de optimalidad del 5%
+    msg=1,
+    timeLimit=900,  # 15 minutos
+    gapRel=0.1,    # 10% de gap
+    maxNodes=5000  # ~5-6x el nodo donde se encontró la primera solución
 )
 
 status = problem.solve(solver)
@@ -246,4 +269,4 @@ print(f"Tiempo de ejecución: {execution_time:.2f} segundos")
 print(f"                     {execution_time/60:.2f} minutos")
 print(f"                     {execution_time/3600:.2f} horas")
 
-create_schedule_csv(problem.variables(), Td, "schedule.csv")
+create_schedule_csv(problem.variables(), Td, "schedule3.csv")
