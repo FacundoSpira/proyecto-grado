@@ -139,6 +139,12 @@ def cargar_datos_calendario(directorio_datos):
         dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
         dist_sem.update({(c2, c1): v for (c1, c2), v in dist_sem.items()})
 
+        d_max = max(D)
+
+        d_peso = {}
+        for d in D:
+            d_peso[d] = 1 / d
+
         return {
             # Conjuntos
             "D": D,
@@ -159,7 +165,9 @@ def cargar_datos_calendario(directorio_datos):
             "fac_cp": fac_cp,
             "ins": ins,
             "co": co,
-            "dist_sem": dist_sem
+            "dist_sem": dist_sem,
+            "d_peso": d_peso,
+            "d_max": d_max,
         }
 
     except Exception as e:
