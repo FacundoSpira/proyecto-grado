@@ -22,6 +22,7 @@ S = datos.get("S")
 K = datos.get("K")
 SUG = datos.get("SUG")
 PA = datos.get("PA")
+COP = datos.get("COP")
 P = datos.get("P")
 PARES_DIAS = datos.get("PARES_DIAS")
 PARES_CURSOS = datos.get("PARES_CURSOS")
@@ -43,25 +44,29 @@ def get_possible_distances(D):
             return sorted(list(distances))
 
 distancias = get_possible_distances(D)
+M = max(distancias)
 
 dist_peso = {dist: 1/(dist + 1) for dist in distancias}
 
 
 # ==== VARIABLES DE DECISIÓN ====
 
-# Variable que vale 1 si la UC c se asigna al día d en el turno t
-x = pl.LpVariable.dicts("x", (C, D, T), cat=pl.LpBinary)
-
-z = pl.LpVariable.dicts("z", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
-z_plus = pl.LpVariable.dicts("z_plus", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
-z_minus = pl.LpVariable.dicts("z_minus", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
-
 # Variables binarias para identificar cada distancia posible
-
 w = pl.LpVariable.dicts("w",
                         ((c1, c2, dist) for (c1, c2) in PARES_CURSOS
                         for dist in distancias),
                         cat=pl.LpBinary)
+
+# Variable que vale 1 si la UC c se asigna al día d en el turno t
+x = pl.LpVariable.dicts("x", (C, D, T), cat=pl.LpBinary)
+
+# Variable auxiliar para definir valor de z
+y = pl.LpVariable.dicts("y", PARES_CURSOS, cat=pl.LpBinary)
+
+# Variable entera que vale la distancia entre c1 y c2
+z = pl.LpVariable.dicts("z", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
+z_plus = pl.LpVariable.dicts("z_plus", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
+z_minus = pl.LpVariable.dicts("z_minus", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
 
 # ==== FUNCION OBJETIVO ====
 
@@ -88,6 +93,14 @@ problem += pl.lpSum(
 )
 
 # ==== RESTRICCIONES ====
+
+# Los cursos que tengan profesores coincidentes no pueden ser asignados el mismo dia
+for d in D:
+    for c1, c2 in COP:
+        problem += (
+            pl.lpSum(x[c1][d][t] + x[c2][d][t] for t in Td[d]) <= 1,
+            f"No_Overlap_COP_{c1}_{c2}_Dia_{d}",
+        )
 
 # La evaluación de una UC se asigna a único día y turno:
 for c in C:
@@ -117,22 +130,23 @@ for c in PA.keys():
     problem += (pl.lpSum(x[c][d][t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
 
 for c1, c2 in PARES_CURSOS:
-        # Calcula la diferencia entre los días asignados
-        problem += (
-            pl.lpSum(d * pl.lpSum(x[c1][d][t] for t in Td[d]) for d in D) -
-            pl.lpSum(d * pl.lpSum(x[c2][d][t] for t in Td[d]) for d in D) ==
-            z_plus[c1, c2] - z_minus[c1, c2]
-        )
-
-        # La distancia absoluta
-        problem += z[c1, c2] == z_plus[c1, c2] + z_minus[c1, c2]
-
-        # Solo una distancia puede ser seleccionada
-        problem += pl.lpSum(w[c1, c2, dist] for dist in distancias) == 1
-
-        # La distancia z debe corresponder con la w seleccionada
-        problem += z[c1, c2] == pl.lpSum(dist * w[c1, c2, dist]
-                                        for dist in distancias)
+    # Calculate the difference between the days assigned to c1 and c2
+    day_c1 = pl.lpSum(d * pl.lpSum(x[c1][d][t] for t in Td[d]) for d in D)
+    day_c2 = pl.lpSum(d * pl.lpSum(x[c2][d][t] for t in Td[d]) for d in D)
+    
+    # Set up the absolute difference constraints
+    problem += (day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
+                f"Diff_Days_{c1}_{c2}")
+    
+    problem += (z[c1, c2] == z_plus[c1, c2] + z_minus[c1, c2],
+                f"Absolute_Distance_{c1}_{c2}")
+    
+    problem += pl.lpSum(w[c1, c2, dist] for dist in distancias) == 1
+    problem += z[c1, c2] == pl.lpSum(dist * w[c1, c2, dist]
+                            for dist in distancias)
+    # Use y to control which of z_plus or z_minus is active
+    problem += (z_plus[c1, c2] <= M * y[c1, c2], f"ZPlus_Control_{c1}_{c2}")
+    problem += (z_minus[c1, c2] <= M * (1 - y[c1, c2]), f"ZMinus_Control_{c1}_{c2}")
 
 # ==== SOLUCIÓN ====
 solver = pl.PULP_CBC_CMD(

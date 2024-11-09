@@ -34,6 +34,11 @@ def cargar_datos_calendario(directorio_datos):
         # Turnos
         T = list(cargar_csv("turnos")["id"])
 
+        # Profesores coincidentes
+        cop_df = cargar_csv("profesores")
+        COP = [(row["uc_1"], row["uc_2"])
+             for _, row in cop_df.iterrows()]
+
         # Turnos disponibles por día
         turnos_dia_df = cargar_csv("turnos_dias")
         Td = {d: [] for d in D}  # Inicializar diccionario vacío para cada día
@@ -150,6 +155,7 @@ def cargar_datos_calendario(directorio_datos):
             "SUG": SUG,
             "PA": PA,
             "P": P,
+            "COP": COP,
             "PARES_DIAS": PARES_DIAS,
             "PARES_CURSOS": PARES_CURSOS,
             "cursos_mismo_semestre": cursos_mismo_semestre,
