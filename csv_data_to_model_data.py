@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from itertools import combinations
 
+
 def cargar_datos_calendario(directorio_datos):
     """
     Carga los conjuntos y parámetros desde archivos CSV para el modelo de calendario
@@ -36,8 +37,7 @@ def cargar_datos_calendario(directorio_datos):
 
         # Profesores coincidentes
         cop_df = cargar_csv("profesores")
-        COP = [(row["uc_1"], row["uc_2"])
-             for _, row in cop_df.iterrows()]
+        COP = [(row["uc_1"], row["uc_2"]) for _, row in cop_df.iterrows()]
 
         # Turnos disponibles por día
         turnos_dia_df = cargar_csv("turnos_dias")
@@ -56,7 +56,6 @@ def cargar_datos_calendario(directorio_datos):
         for d in Td:
             Td[d] = sorted(list(set(Td[d])))  # Eliminar duplicados y ordenar
 
-
         # Ordenar los turnos para cada día
         for d in Td:
             Td[d].sort()
@@ -69,8 +68,10 @@ def cargar_datos_calendario(directorio_datos):
 
         # Sugerencias de cursos
         sug_df = cargar_csv("trayectoria_sugerida")
-        SUG = [(row["unidad_curricular"], row["semestre"], row["carrera"])
-               for _, row in sug_df.iterrows()]
+        SUG = [
+            (row["unidad_curricular"], row["semestre"], row["carrera"])
+            for _, row in sug_df.iterrows()
+        ]
 
         # Pre-asignaciones
         pa_df = cargar_csv("preasignaciones")
@@ -83,8 +84,7 @@ def cargar_datos_calendario(directorio_datos):
 
         # Previaturas
         prev_df = cargar_csv("previas")
-        P = [(row["uc"], row["uc_requerida"])
-             for _, row in prev_df.iterrows()]
+        P = [(row["uc"], row["uc_requerida"]) for _, row in prev_df.iterrows()]
 
         # Pares frecuentes
         PARES_DIAS = [(d1, d2) for d1 in D for d2 in D]
@@ -102,31 +102,35 @@ def cargar_datos_calendario(directorio_datos):
 
         # Capacidad por día y turno
         cap_df = cargar_csv("capacidad")
-        cp = {(row["id_dia"], row["id_turno"]): row["capacidad"]
-              for _, row in cap_df.iterrows()}
+        cp = {
+            (row["id_dia"], row["id_turno"]): row["capacidad"]
+            for _, row in cap_df.iterrows()
+        }
 
         # Factor de capacidad
         fac_cp = float(cargar_csv("datos")["fac_cp"].iloc[0])
 
         # Inscriptos por curso
         ins_df = cargar_csv("inscriptos")
-        ins = {row["uc"]: row["inscriptos"]
-               for _, row in ins_df.iterrows()}
+        ins = {row["uc"]: row["inscriptos"] for _, row in ins_df.iterrows()}
 
         # Inscriptos simultáneos
         co_df = cargar_csv("coincidencia")
-        co = {(row["uc_1"], row["uc_2"]): row["coincidencia"]
-              for _, row in co_df.iterrows()}
+        co = {
+            (row["uc_1"], row["uc_2"]): row["coincidencia"]
+            for _, row in co_df.iterrows()
+        }
 
         # Completar co para todos los pares de cursos
-        co.update({(c1, c2): 0 for (c1,c2) in PARES_CURSOS if (c1, c2) not in co})
+        co.update({(c1, c2): 0 for (c1, c2) in PARES_CURSOS if (c1, c2) not in co})
         co.update({(c2, c1): v for (c1, c2), v in co.items()})
         co.update({(c, c): ins[c] for c in C})
 
         # Distancia en semestres (pre-calculada)
         def get_dist_sem(c1, c2):
             careers_in_common = [
-                k for (_, _, k) in SUG
+                k
+                for (_, _, k) in SUG
                 if any((c1, s1, k) in SUG for s1 in S)
                 and any((c2, s2, k) in SUG for s2 in S)
             ]
@@ -159,7 +163,6 @@ def cargar_datos_calendario(directorio_datos):
             "PARES_DIAS": PARES_DIAS,
             "PARES_CURSOS": PARES_CURSOS,
             "cursos_mismo_semestre": cursos_mismo_semestre,
-
             # Parámetros
             "cp": cp,
             "fac_cp": fac_cp,

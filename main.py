@@ -11,7 +11,6 @@ start = timer()
 # ==== FUNCIONES AUXILIARES ====
 
 
-
 datos = cargar_datos_calendario("caso2")
 
 D = datos.get("D")
@@ -33,29 +32,32 @@ ins = datos.get("ins")
 co = datos.get("co")
 dist_sem = datos.get("dist_sem")
 
+
 def get_possible_distances(D):
-            """
-            Calcula todas las posibles distancias entre los días en D
-            """
-            distances = set()
-            for d1 in D:
-                for d2 in D:
-                    distances.add(abs(d1 - d2))
-            return sorted(list(distances))
+    """
+    Calcula todas las posibles distancias entre los días en D
+    """
+    distances = set()
+    for d1 in D:
+        for d2 in D:
+            distances.add(abs(d1 - d2))
+    return sorted(list(distances))
+
 
 distancias = get_possible_distances(D)
 M = max(distancias)
 
-dist_peso = {dist: 1/(dist + 1) for dist in distancias}
+dist_peso = {dist: 1 / (dist + 1) for dist in distancias}
 
 
 # ==== VARIABLES DE DECISIÓN ====
 
 # Variables binarias para identificar cada distancia posible
-w = pl.LpVariable.dicts("w",
-                        ((c1, c2, dist) for (c1, c2) in PARES_CURSOS
-                        for dist in distancias),
-                        cat=pl.LpBinary)
+w = pl.LpVariable.dicts(
+    "w",
+    ((c1, c2, dist) for (c1, c2) in PARES_CURSOS for dist in distancias),
+    cat=pl.LpBinary,
+)
 
 # Variable que vale 1 si la UC c se asigna al día d en el turno t
 x = pl.LpVariable.dicts("x", (C, D, T), cat=pl.LpBinary)
@@ -79,7 +81,9 @@ problem += pl.lpSum(
     # Para cada par de cursos
     pl.lpSum(
         # Multiplicamos el peso de la distancia por la variable binaria correspondiente
-        dist_peso[dist] * w[c1, c2, dist] * (co[c1, c2] / max_co + 1 / (dist_sem[c1, c2] + 1))
+        dist_peso[dist]
+        * w[c1, c2, dist]
+        * (co[c1, c2] / max_co + 1 / (dist_sem[c1, c2] + 1))
         for dist in distancias
     )
     for c1, c2 in PARES_CURSOS
@@ -133,17 +137,20 @@ for c1, c2 in PARES_CURSOS:
     # Calculate the difference between the days assigned to c1 and c2
     day_c1 = pl.lpSum(d * pl.lpSum(x[c1][d][t] for t in Td[d]) for d in D)
     day_c2 = pl.lpSum(d * pl.lpSum(x[c2][d][t] for t in Td[d]) for d in D)
-    
+
     # Set up the absolute difference constraints
-    problem += (day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
-                f"Diff_Days_{c1}_{c2}")
-    
-    problem += (z[c1, c2] == z_plus[c1, c2] + z_minus[c1, c2],
-                f"Absolute_Distance_{c1}_{c2}")
-    
+    problem += (
+        day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
+        f"Diff_Days_{c1}_{c2}",
+    )
+
+    problem += (
+        z[c1, c2] == z_plus[c1, c2] + z_minus[c1, c2],
+        f"Absolute_Distance_{c1}_{c2}",
+    )
+
     problem += pl.lpSum(w[c1, c2, dist] for dist in distancias) == 1
-    problem += z[c1, c2] == pl.lpSum(dist * w[c1, c2, dist]
-                            for dist in distancias)
+    problem += z[c1, c2] == pl.lpSum(dist * w[c1, c2, dist] for dist in distancias)
     # Use y to control which of z_plus or z_minus is active
     problem += (z_plus[c1, c2] <= M * y[c1, c2], f"ZPlus_Control_{c1}_{c2}")
     problem += (z_minus[c1, c2] <= M * (1 - y[c1, c2]), f"ZMinus_Control_{c1}_{c2}")
@@ -153,8 +160,8 @@ solver = pl.PULP_CBC_CMD(
     threads=12,
     msg=1,
     timeLimit=900,  # 15 minutos
-    gapRel=0.1,    # 10% de gap
-    maxNodes=5000  # ~5-6x el nodo donde se encontró la primera solución
+    gapRel=0.1,  # 10% de gap
+    maxNodes=5000,  # ~5-6x el nodo donde se encontró la primera solución
 )
 
 status = problem.solve(solver)
