@@ -148,6 +148,17 @@ def cargar_datos_calendario(directorio_datos):
         dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
         dist_sem.update({(c2, c1): v for (c1, c2), v in dist_sem.items()})
 
+        def get_ds(D):
+            distances = set()
+            for d1 in D:
+                for d2 in D:
+                    distances.add(abs(d1 - d2))
+            return sorted(list(distances))
+
+        DS = get_ds(D)
+        M = max(DS)
+        dist_peso = {ds: 1 / (ds + 1) for ds in DS}
+
         return {
             # Conjuntos
             "D": D,
@@ -163,12 +174,16 @@ def cargar_datos_calendario(directorio_datos):
             "PARES_DIAS": PARES_DIAS,
             "PARES_CURSOS": PARES_CURSOS,
             "cursos_mismo_semestre": cursos_mismo_semestre,
+            "DS": DS,
             # Parámetros
             "cp": cp,
             "fac_cp": fac_cp,
             "ins": ins,
             "co": co,
             "dist_sem": dist_sem,
+            "dist_peso": dist_peso,
+            # Constantes
+            "M": M,
         }
 
     except Exception as e:
