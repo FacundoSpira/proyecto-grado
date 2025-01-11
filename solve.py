@@ -29,15 +29,11 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     C = datos.get("C")
     T = datos.get("T")
     Td = datos.get("Td")
-    S = datos.get("S")
-    K = datos.get("K")
-    SUG = datos.get("SUG")
     PA = datos.get("PA")
     COP = datos.get("COP")
     P = datos.get("P")
-    PARES_DIAS = datos.get("PARES_DIAS")
     PARES_CURSOS = datos.get("PARES_CURSOS")
-    cursos_mismo_semestre = datos.get("cursos_mismo_semestre")
+    CURSOS_MISMO_SEMESTRE = datos.get("CURSOS_MISMO_SEMESTRE")
     cp = datos.get("cp")
     fac_cp = datos.get("fac_cp")
     ins = datos.get("ins")
@@ -119,7 +115,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # Si dos UC están sugeridas en el mismo semestre para la misma carrera, se asignan a días distintos
     for d in D:
-        for c1, c2 in cursos_mismo_semestre:
+        for c1, c2 in CURSOS_MISMO_SEMESTRE:
             problem += (
                 pl.lpSum(x[c1][d][t] + x[c2][d][t] for t in Td[d]) <= 1,
                 f"Dias_Distintos_{c1}_{c2}_Dia_{d}",

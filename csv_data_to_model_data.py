@@ -87,11 +87,10 @@ def cargar_datos_calendario(directorio_datos):
         P = [(row["uc"], row["uc_requerida"]) for _, row in prev_df.iterrows()]
 
         # Pares frecuentes
-        PARES_DIAS = [(d1, d2) for d1 in D for d2 in D]
         PARES_CURSOS = list(combinations(C, 2))
 
         # Cursos mismo semestre
-        cursos_mismo_semestre = {
+        CURSOS_MISMO_SEMESTRE = {
             (c1, c2): True
             for (c1, s1, k1) in SUG
             for (c2, s2, k2) in SUG
@@ -171,9 +170,8 @@ def cargar_datos_calendario(directorio_datos):
             "PA": PA,
             "P": P,
             "COP": COP,
-            "PARES_DIAS": PARES_DIAS,
             "PARES_CURSOS": PARES_CURSOS,
-            "cursos_mismo_semestre": cursos_mismo_semestre,
+            "CURSOS_MISMO_SEMESTRE": CURSOS_MISMO_SEMESTRE,
             "DS": DS,
             # Parámetros
             "cp": cp,
