@@ -1,6 +1,7 @@
 from timeit import default_timer as timer
 from typing import TypedDict
 
+import os
 import pulp as pl
 
 from csv_data_to_model_data import cargar_datos_calendario
@@ -20,7 +21,7 @@ class Config(TypedDict):
     maxNodes: int
 
 
-def solve_model(dir_name: str, config: Config) -> None:
+def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region CARGA DE DATOS
     datos = cargar_datos_calendario(dir_name)
 
@@ -192,22 +193,23 @@ def solve_model(dir_name: str, config: Config) -> None:
         case _:
             raise ValueError(f"Solver {config['solver']} no soportado")
 
-    start = timer()
-
+    start_time = timer()
     problem.solve(solver)
-    print("Status:", pl.LpStatus[problem.status])
+    end_time = timer()
 
-    for v in problem.variables():
-        print(v.name, "=", v.varValue)
+    execution_time = end_time - start_time
 
-    print("Valor óptimo de la función objetivo: ", pl.value(problem.objective))
+    if os.environ.get("DEBUG", "false") == "true":
+        print("Status:", pl.LpStatus[problem.status])
 
-    end = timer()
-    execution_time = end - start
+        for v in problem.variables():
+            print(v.name, "=", v.varValue)
 
-    print(f"Tiempo de ejecución: {execution_time:.2f} segundos")
-    print(f"                     {execution_time/60:.2f} minutos")
-    print(f"                     {execution_time/3600:.2f} horas")
+        print("Valor óptimo de la función objetivo: ", pl.value(problem.objective))
 
-    create_schedule_csv(problem.variables(), Td, "schedule2-v2.csv")
+        print(f"Tiempo de ejecución: {execution_time:.2f} segundos")
+        print(f"                     {execution_time/60:.2f} minutos")
+        print(f"                     {execution_time/3600:.2f} horas")
+
+    return pl.value(problem.objective), execution_time, problem.variables()
     # endregion
