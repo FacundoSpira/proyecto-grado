@@ -1,9 +1,10 @@
 from timeit import default_timer as timer
+from typing import TypedDict
 
 import pulp as pl
 
-from variables_to_csv import create_schedule_csv
 from csv_data_to_model_data import cargar_datos_calendario
+from variables_to_csv import create_schedule_csv
 
 
 # Definición de un Enum para los diferentes solvers soportados
@@ -13,7 +14,13 @@ class Solver:
     PULP_CBC_CMD = "PULP_CBC_CMD"
 
 
-def solve_model(dir_name, config):
+class Config(TypedDict):
+    solver: Solver
+    gapRel: float
+    maxNodes: int
+
+
+def solve_model(dir_name: str, config: Config) -> None:
     # region CARGA DE DATOS
     datos = cargar_datos_calendario(dir_name)
 
@@ -155,7 +162,6 @@ def solve_model(dir_name, config):
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
