@@ -51,7 +51,11 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region DEFINICIÓN DE VARIABLES
 
     # Variable que vale 1 si la UC c se asigna al día d en el turno t
-    x = pl.LpVariable.dicts("x", (C, D, T), cat=pl.LpBinary)
+    x = {}
+    for c in C:
+        for d in D:
+            for t in Td[d]:
+                x[(c, d, t)] = pl.LpVariable(f"x_{c}_{d}_{t}", cat=pl.LpBinary)
 
     # Variable binaria para identificar si distancia entre las evaluaciones de dos UC es ds
     w = pl.LpVariable.dicts(
@@ -61,11 +65,11 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     )
 
     # Variable entera que vale la distancia entre las evaluaciones de c1 y c2
-    z = pl.LpVariable.dicts("z", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
+    z = pl.LpVariable.dicts("z", PARES_CURSOS, lowBound=0)
 
     # Variables auxiliares para definir valor de z
-    z_plus = pl.LpVariable.dicts("z_plus", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
-    z_minus = pl.LpVariable.dicts("z_minus", PARES_CURSOS, lowBound=0, cat=pl.LpInteger)
+    z_plus = pl.LpVariable.dicts("z_plus", PARES_CURSOS, lowBound=0)
+    z_minus = pl.LpVariable.dicts("z_minus", PARES_CURSOS, lowBound=0)
 
     # Variable binaria para controlar que z_plus o z_minus es activo
     y = pl.LpVariable.dicts("y", PARES_CURSOS, cat=pl.LpBinary)
@@ -102,14 +106,14 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     for d in D:
         for c1, c2 in COP:
             problem += (
-                pl.lpSum(x[c1][d][t] + x[c2][d][t] for t in Td[d]) <= 1,
+                pl.lpSum(x[c1, d, t] + x[c2, d, t] for t in Td[d]) <= 1,
                 f"No_Overlap_COP_{c1}_{c2}_Dia_{d}",
             )
 
     # La evaluación de una UC se asigna a único día y turno:
     for c in C:
         problem += (
-            pl.lpSum(x[c][d][t] for d in D for t in Td[d]) == 1,
+            pl.lpSum(x[c, d, t] for d in D for t in Td[d]) == 1,
             f"AsignacionUnica_{c}",
         )
 
@@ -117,7 +121,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     for d in D:
         for c1, c2 in CURSOS_MISMO_SEMESTRE:
             problem += (
-                pl.lpSum(x[c1][d][t] + x[c2][d][t] for t in Td[d]) <= 1,
+                pl.lpSum(x[c1, d, t] + x[c2, d, t] for t in Td[d]) <= 1,
                 f"Dias_Distintos_{c1}_{c2}_Dia_{d}",
             )
 
@@ -125,18 +129,18 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     for d in D:
         for t in Td[d]:
             problem += (
-                pl.lpSum(ins[c] * x[c][d][t] for c in C) <= cp[d, t] * fac_cp,
+                pl.lpSum(ins[c] * x[c, d, t] for c in C) <= cp[d, t] * fac_cp,
                 f"Capacidad_{d}_{t}",
             )
 
     # Las evaluaciones que se pre-asignan a un día y turno, se asignan en ese día y turno.
     for c in PA.keys():
-        problem += (pl.lpSum(x[c][d][t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
+        problem += (pl.lpSum(x[c, d, t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
 
     for c1, c2 in PARES_CURSOS:
         # Calcular la diferencia entre los días asignados a c1 y c2
-        day_c1 = pl.lpSum(d * pl.lpSum(x[c1][d][t] for t in Td[d]) for d in D)
-        day_c2 = pl.lpSum(d * pl.lpSum(x[c2][d][t] for t in Td[d]) for d in D)
+        day_c1 = pl.lpSum(d * pl.lpSum(x[c1, d, t] for t in Td[d]) for d in D)
+        day_c2 = pl.lpSum(d * pl.lpSum(x[c2, d, t] for t in Td[d]) for d in D)
 
         # Set up the absolute difference constraints
         problem += (
