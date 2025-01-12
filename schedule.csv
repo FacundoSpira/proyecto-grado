@@ -1,10 +1,10 @@
 Día/Turno,Turno 1,Turno 2,Turno 3
-Día 1,"f3, p2",p1,
-Día 2,f1,fE1,
-Día 3,gal2,gal1,
+Día 1,cDiv,fE1,logica
+Día 2,"cDivv, cV",,
+Día 3,pye,,
 Día 4,,,
-Día 5,pye,,
-Día 6,,cDiv,logica
-Día 7,"cDivv, cV",,
+Día 5,gal2,,gal1
+Día 6,p2,p1,
+Día 7,"f1, f3",,
 Día 8,,,
-Día 9,"md1, tallerine",disLog,md2
+Día 9,md1,"disLog, tallerine",md2

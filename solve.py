@@ -58,21 +58,22 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
                 x[(c, d, t)] = pl.LpVariable(f"x_{c}_{d}_{t}", cat=pl.LpBinary)
 
     # Variable binaria para identificar si distancia entre las evaluaciones de dos UC es ds
-    w = pl.LpVariable.dicts(
-        "w",
-        ((c1, c2, ds) for (c1, c2) in PARES_CURSOS for ds in DS),
-        cat=pl.LpBinary,
-    )
+    w = {}
+    for c1, c2 in PARES_CURSOS:
+        for ds in DS:
+            w[(c1, c2, ds)] = pl.LpVariable(f"w_{c1}_{c2}_{ds}", cat=pl.LpBinary)
 
-    # Variable entera que vale la distancia entre las evaluaciones de c1 y c2
-    z = pl.LpVariable.dicts("z", PARES_CURSOS, lowBound=0)
+    # Variables para definir la distancia entre las evaluaciones de dos UC
+    z = {}  # Valor absoluto de la diferencia entre las evaluaciones de c1 y c2
+    z_plus = {}  # Indica la parte positiva de z
+    z_minus = {}  # Indica la parte negativa de z
+    y = {}  # Indica si z_plus o z_minus es activo
 
-    # Variables auxiliares para definir valor de z
-    z_plus = pl.LpVariable.dicts("z_plus", PARES_CURSOS, lowBound=0)
-    z_minus = pl.LpVariable.dicts("z_minus", PARES_CURSOS, lowBound=0)
-
-    # Variable binaria para controlar que z_plus o z_minus es activo
-    y = pl.LpVariable.dicts("y", PARES_CURSOS, cat=pl.LpBinary)
+    for c1, c2 in PARES_CURSOS:
+        z[(c1, c2)] = pl.LpVariable(f"z_{c1}_{c2}", lowBound=0)
+        z_plus[(c1, c2)] = pl.LpVariable(f"z_plus_{c1}_{c2}", lowBound=0)
+        z_minus[(c1, c2)] = pl.LpVariable(f"z_minus_{c1}_{c2}", lowBound=0)
+        y[(c1, c2)] = pl.LpVariable(f"y_{c1}_{c2}", cat=pl.LpBinary)
     # endregion
 
     # region DEFINICIÓN DE LA FUNCIÓN OBJETIVO
@@ -85,8 +86,8 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
         pl.lpSum(
             # Multiplicamos el peso de la distancia por la variable binaria correspondiente
             dist_peso[ds]
-            * w[c1, c2, ds]
             * (co[c1, c2] / max_co + 1 / (dist_sem[c1, c2] + 1))
+            * w[c1, c2, ds]
             for ds in DS
         )
         for c1, c2 in PARES_CURSOS
