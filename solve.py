@@ -27,7 +27,6 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     D = datos.get("D")
     C = datos.get("C")
-    T = datos.get("T")
     Td = datos.get("Td")
     PA = datos.get("PA")
     COP = datos.get("COP")
