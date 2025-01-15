@@ -3,7 +3,7 @@ import os
 from itertools import combinations
 
 
-def cargar_datos_calendario(directorio_datos):
+def load_calendar_data(dir_name):
     """
     Carga los conjuntos y parámetros desde archivos CSV para el modelo de calendario
     de evaluaciones.
@@ -15,32 +15,32 @@ def cargar_datos_calendario(directorio_datos):
         dict: Diccionario con todos los conjuntos y parámetros del modelo
     """
 
-    def cargar_csv(nombre):
-        ruta_archivo = os.path.join(directorio_datos, f"{nombre}.csv")
+    def load_csv(name):
+        file_path = os.path.join(dir_name, f"{name}.csv")
 
-        if not os.path.exists(ruta_archivo):
-            raise FileNotFoundError(f"No se encontró el archivo {ruta_archivo}")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"No se encontró el archivo {file_path}")
 
-        return pd.read_csv(ruta_archivo)
+        return pd.read_csv(file_path)
 
     try:
         # ==== CONJUNTOS ====
 
         # Días del calendario
-        D = list(cargar_csv("dias")["id"])
+        D = list(load_csv("dias")["id"])
 
         # Unidades curriculares
-        C = list(cargar_csv("unidades_curriculares")["codigo"])
+        C = list(load_csv("unidades_curriculares")["codigo"])
 
         # Turnos
-        T = list(cargar_csv("turnos")["id"])
+        T = list(load_csv("turnos")["id"])
 
         # Profesores coincidentes
-        cop_df = cargar_csv("profesores")
+        cop_df = load_csv("profesores")
         COP = [(row["uc_1"], row["uc_2"]) for _, row in cop_df.iterrows()]
 
         # Turnos disponibles por día
-        turnos_dia_df = cargar_csv("turnos_dias")
+        turnos_dia_df = load_csv("turnos_dias")
         Td = {d: [] for d in D}  # Inicializar diccionario vacío para cada día
 
         # Llenar Td basado en los datos del CSV
@@ -61,20 +61,20 @@ def cargar_datos_calendario(directorio_datos):
             Td[d].sort()
 
         # Semestres
-        S = list(cargar_csv("semestres")["id"])
+        S = list(load_csv("semestres")["id"])
 
         # Carreras
-        K = list(cargar_csv("carreras")["codigo"])
+        K = list(load_csv("carreras")["codigo"])
 
         # Sugerencias de cursos
-        sug_df = cargar_csv("trayectoria_sugerida")
+        sug_df = load_csv("trayectoria_sugerida")
         SUG = [
             (row["unidad_curricular"], row["semestre"], row["carrera"])
             for _, row in sug_df.iterrows()
         ]
 
         # Pre-asignaciones
-        pa_df = cargar_csv("preasignaciones")
+        pa_df = load_csv("preasignaciones")
         PA = {}
         for _, row in pa_df.iterrows():
             unidad_curricular = row["unidad_curricular"]
@@ -83,7 +83,7 @@ def cargar_datos_calendario(directorio_datos):
             PA[unidad_curricular].append((row["dia"], row["turno"]))
 
         # Previaturas
-        prev_df = cargar_csv("previas")
+        prev_df = load_csv("previas")
         P = [(row["uc"], row["uc_requerida"]) for _, row in prev_df.iterrows()]
 
         # Pares frecuentes
@@ -100,21 +100,21 @@ def cargar_datos_calendario(directorio_datos):
         # ==== PARÁMETROS ====
 
         # Capacidad por día y turno
-        cap_df = cargar_csv("capacidad")
+        cap_df = load_csv("capacidad")
         cp = {
             (row["id_dia"], row["id_turno"]): row["capacidad"]
             for _, row in cap_df.iterrows()
         }
 
         # Factor de capacidad
-        fac_cp = float(cargar_csv("datos")["fac_cp"].iloc[0])
+        fac_cp = float(load_csv("datos")["fac_cp"].iloc[0])
 
         # Inscriptos por curso
-        ins_df = cargar_csv("inscriptos")
+        ins_df = load_csv("inscriptos")
         ins = {row["uc"]: row["inscriptos"] for _, row in ins_df.iterrows()}
 
         # Inscriptos simultáneos
-        co_df = cargar_csv("coincidencia")
+        co_df = load_csv("coincidencia")
         co = {
             (row["uc_1"], row["uc_2"]): row["coincidencia"]
             for _, row in co_df.iterrows()
@@ -185,4 +185,4 @@ def cargar_datos_calendario(directorio_datos):
         }
 
     except Exception as e:
-        raise Exception(f"Error al cargar los datos desde {directorio_datos}: {str(e)}")
+        raise Exception(f"Error al cargar los datos desde {dir_name}: {str(e)}")
