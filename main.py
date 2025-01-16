@@ -1,5 +1,5 @@
 from solve import solve_model, Solver
-from variables_to_csv import create_schedule_csv
+from generate_schedule import generate_schedule_csv
 
 
 if __name__ == "__main__":
@@ -9,4 +9,4 @@ if __name__ == "__main__":
 
     print(f"Valor óptimo de la función objetivo: {value}")
     print(f"Tiempo de ejecución: {time:.2f} segundos")
-    create_schedule_csv(variables, "schedule.csv")
+    generate_schedule_csv(variables, "schedule.csv")

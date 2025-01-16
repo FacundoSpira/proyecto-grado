@@ -66,7 +66,7 @@ def load_calendar_data(dir_name):
         # Carreras
         K = list(load_csv("carreras")["codigo"])
 
-        # Sugerencias de cursos
+        # Sugerencias de UCs
         sug_df = load_csv("trayectoria_sugerida")
         SUG = [
             (row["unidad_curricular"], row["semestre"], row["carrera"])
@@ -87,10 +87,10 @@ def load_calendar_data(dir_name):
         P = [(row["uc"], row["uc_requerida"]) for _, row in prev_df.iterrows()]
 
         # Pares frecuentes
-        PARES_CURSOS = list(combinations(C, 2))
+        PARES_UC = list(combinations(C, 2))
 
-        # Cursos mismo semestre
-        CURSOS_MISMO_SEMESTRE = {
+        # Unidades curriculares del mismo semestre
+        UC_MISMO_SEMESTRE = {
             (c1, c2): True
             for (c1, s1, k1) in SUG
             for (c2, s2, k2) in SUG
@@ -109,7 +109,7 @@ def load_calendar_data(dir_name):
         # Factor de capacidad
         fac_cp = float(load_csv("datos")["fac_cp"].iloc[0])
 
-        # Inscriptos por curso
+        # Inscriptos por UC
         ins_df = load_csv("inscriptos")
         ins = {row["uc"]: row["inscriptos"] for _, row in ins_df.iterrows()}
 
@@ -120,8 +120,8 @@ def load_calendar_data(dir_name):
             for _, row in co_df.iterrows()
         }
 
-        # Completar co para todos los pares de cursos
-        co.update({(c1, c2): 0 for (c1, c2) in PARES_CURSOS if (c1, c2) not in co})
+        # Completar co para todos los pares de UCs
+        co.update({(c1, c2): 0 for (c1, c2) in PARES_UC if (c1, c2) not in co})
         co.update({(c2, c1): v for (c1, c2), v in co.items()})
         co.update({(c, c): ins[c] for c in C})
 
@@ -144,7 +144,7 @@ def load_calendar_data(dir_name):
             else:
                 return len(S)
 
-        dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_CURSOS}
+        dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_UC}
         dist_sem.update({(c2, c1): v for (c1, c2), v in dist_sem.items()})
 
         def get_ds(D):
@@ -170,8 +170,8 @@ def load_calendar_data(dir_name):
             "PA": PA,
             "P": P,
             "COP": COP,
-            "PARES_CURSOS": PARES_CURSOS,
-            "CURSOS_MISMO_SEMESTRE": CURSOS_MISMO_SEMESTRE,
+            "PARES_UC": PARES_UC,
+            "UC_MISMO_SEMESTRE": UC_MISMO_SEMESTRE,
             "DS": DS,
             # Parámetros
             "cp": cp,

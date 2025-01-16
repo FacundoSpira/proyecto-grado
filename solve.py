@@ -30,8 +30,8 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     PA = datos.get("PA")
     COP = datos.get("COP")
     P = datos.get("P")
-    PARES_CURSOS = datos.get("PARES_CURSOS")
-    CURSOS_MISMO_SEMESTRE = datos.get("CURSOS_MISMO_SEMESTRE")
+    PARES_UC = datos.get("PARES_UC")
+    UC_MISMO_SEMESTRE = datos.get("UC_MISMO_SEMESTRE")
     cp = datos.get("cp")
     fac_cp = datos.get("fac_cp")
     ins = datos.get("ins")
@@ -57,7 +57,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # Variable binaria para identificar si distancia entre las evaluaciones de dos UC es ds
     w = {}
-    for c1, c2 in PARES_CURSOS:
+    for c1, c2 in PARES_UC:
         for ds in DS:
             w[(c1, c2, ds)] = pl.LpVariable(f"w_{c1}_{c2}_{ds}", cat=pl.LpBinary)
 
@@ -67,7 +67,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     z_minus = {}  # Indica la parte negativa de z
     y = {}  # Indica si z_plus o z_minus es activo
 
-    for c1, c2 in PARES_CURSOS:
+    for c1, c2 in PARES_UC:
         z[(c1, c2)] = pl.LpVariable(f"z_{c1}_{c2}", lowBound=0)
         z_plus[(c1, c2)] = pl.LpVariable(f"z_plus_{c1}_{c2}", lowBound=0)
         z_minus[(c1, c2)] = pl.LpVariable(f"z_minus_{c1}_{c2}", lowBound=0)
@@ -88,7 +88,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             * w[c1, c2, ds]
             for ds in DS
         )
-        for c1, c2 in PARES_CURSOS
+        for c1, c2 in PARES_UC
     ) - pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
@@ -118,7 +118,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # Si dos UC están sugeridas en el mismo semestre para la misma carrera, se asignan a días distintos
     for d in D:
-        for c1, c2 in CURSOS_MISMO_SEMESTRE:
+        for c1, c2 in UC_MISMO_SEMESTRE:
             problem += (
                 pl.lpSum(x[c1, d, t] + x[c2, d, t] for t in Td[d]) <= 1,
                 f"Dias_Distintos_{c1}_{c2}_Dia_{d}",
@@ -136,7 +136,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     for c in PA.keys():
         problem += (pl.lpSum(x[c, d, t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
 
-    for c1, c2 in PARES_CURSOS:
+    for c1, c2 in PARES_UC:
         # Calcular la diferencia entre los días asignados a c1 y c2
         day_c1 = pl.lpSum(d * pl.lpSum(x[c1, d, t] for t in Td[d]) for d in D)
         day_c2 = pl.lpSum(d * pl.lpSum(x[c2, d, t] for t in Td[d]) for d in D)
