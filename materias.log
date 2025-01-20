@@ -1,0 +1,9 @@
+Index(['Unnamed: 0', 'Unnamed: 1', 'Sábado 27', 'Lunes 29', 'Martes 30',
+       'Jueves 2', 'Viernes 3', 'Sábado 4', 'Lunes 6', 'Martes 7',
+       'Miércoles 8', 'Unnamed: 11', 'Sábado 11', 'Unnamed: 13', 'Unnamed: 14',
+       'Unnamed: 15', 'Unnamed: 16', 'Unnamed: 17', 'Unnamed: 18',
+       'Unnamed: 19', 'Viernes 18', 'Sábado 19', 'Lunes 21', 'Martes 22',
+       'Miércoles 23', 'Jueves 24', 'Viernes 25', 'Sábado 26', 'Lunes 28',
+       'Martes 29', 'Miércoles 30', 'Jueves 1', 'Viernes 2'],
+      dtype='object')
+Nombres encontrados bajo columnas 'Día':
