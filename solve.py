@@ -4,8 +4,7 @@ from typing import TypedDict
 import os
 import pulp as pl
 
-from csv_data_to_model_data import cargar_datos_calendario
-from variables_to_csv import create_schedule_csv
+from csv_data_to_model_data import load_calendar_data
 
 
 # Definición de un Enum para los diferentes solvers soportados
@@ -23,7 +22,7 @@ class Config(TypedDict):
 
 def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region CARGA DE DATOS
-    datos = cargar_datos_calendario(dir_name)
+    datos = load_calendar_data(dir_name)
 
     D = datos.get("D")
     C = datos.get("C")
@@ -31,8 +30,8 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     PA = datos.get("PA")
     COP = datos.get("COP")
     P = datos.get("P")
-    PARES_CURSOS = datos.get("PARES_CURSOS")
-    CURSOS_MISMO_SEMESTRE = datos.get("CURSOS_MISMO_SEMESTRE")
+    PARES_UC = datos.get("PARES_UC")
+    UC_MISMO_SEMESTRE = datos.get("UC_MISMO_SEMESTRE")
     cp = datos.get("cp")
     fac_cp = datos.get("fac_cp")
     ins = datos.get("ins")
@@ -58,7 +57,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # Variable binaria para identificar si distancia entre las evaluaciones de dos UC es ds
     w = {}
-    for c1, c2 in PARES_CURSOS:
+    for c1, c2 in PARES_UC:
         for ds in DS:
             w[(c1, c2, ds)] = pl.LpVariable(f"w_{c1}_{c2}_{ds}", cat=pl.LpBinary)
 
@@ -68,7 +67,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     z_minus = {}  # Indica la parte negativa de z
     y = {}  # Indica si z_plus o z_minus es activo
 
-    for c1, c2 in PARES_CURSOS:
+    for c1, c2 in PARES_UC:
         z[(c1, c2)] = pl.LpVariable(f"z_{c1}_{c2}", lowBound=0)
         z_plus[(c1, c2)] = pl.LpVariable(f"z_plus_{c1}_{c2}", lowBound=0)
         z_minus[(c1, c2)] = pl.LpVariable(f"z_minus_{c1}_{c2}", lowBound=0)
@@ -89,7 +88,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             * w[c1, c2, ds]
             for ds in DS
         )
-        for c1, c2 in PARES_CURSOS
+        for c1, c2 in PARES_UC
     ) - pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
@@ -107,7 +106,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
         for c1, c2 in COP:
             problem += (
                 pl.lpSum(x[c1, d, t] + x[c2, d, t] for t in Td[d]) <= 1,
-                f"No_Overlap_COP_{c1}_{c2}_Dia_{d}",
+                f"No_Solapamiento_COP_{c1}_{c2}_Dia_{d}",
             )
 
     # La evaluación de una UC se asigna a único día y turno:
@@ -119,7 +118,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # Si dos UC están sugeridas en el mismo semestre para la misma carrera, se asignan a días distintos
     for d in D:
-        for c1, c2 in CURSOS_MISMO_SEMESTRE:
+        for c1, c2 in UC_MISMO_SEMESTRE:
             problem += (
                 pl.lpSum(x[c1, d, t] + x[c2, d, t] for t in Td[d]) <= 1,
                 f"Dias_Distintos_{c1}_{c2}_Dia_{d}",
@@ -137,38 +136,42 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     for c in PA.keys():
         problem += (pl.lpSum(x[c, d, t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
 
-    for c1, c2 in PARES_CURSOS:
+    for c1, c2 in PARES_UC:
         # Calcular la diferencia entre los días asignados a c1 y c2
         day_c1 = pl.lpSum(d * pl.lpSum(x[c1, d, t] for t in Td[d]) for d in D)
         day_c2 = pl.lpSum(d * pl.lpSum(x[c2, d, t] for t in Td[d]) for d in D)
 
-        # Set up the absolute difference constraints
+        # Restricciones para hacer que z valga efectivamente la diferencia absoluta
         problem += (
             day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
-            f"Diff_Days_{c1}_{c2}",
+            f"Diferencia_Dias_{c1}_{c2}",
         )
 
         problem += (
             z[c1, c2] == z_plus[c1, c2] + z_minus[c1, c2],
-            f"Absolute_Distance_{c1}_{c2}",
+            f"Distancia_Absoluta_{c1}_{c2}",
         )
 
         problem += pl.lpSum(w[c1, c2, ds] for ds in DS) == 1
         problem += z[c1, c2] == pl.lpSum(ds * w[c1, c2, ds] for ds in DS)
 
-        # Use y to control which of z_plus or z_minus is active
-        problem += (z_plus[c1, c2] <= M * y[c1, c2], f"ZPlus_Control_{c1}_{c2}")
-        problem += (z_minus[c1, c2] <= M * (1 - y[c1, c2]), f"ZMinus_Control_{c1}_{c2}")
+        # Usar y para controlar qué parte de z_plus o z_minus está activa
+        problem += (z_plus[c1, c2] <= M * y[c1, c2], f"Control_z_plus_{c1}_{c2}")
+        problem += (
+            z_minus[c1, c2] <= M * (1 - y[c1, c2]),
+            f"Control_z_minus_{c1}_{c2}",
+        )
     # endregion
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
+    timeLimit = 900  # 15 minutos
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
                 threads=12,
-                timeLimit=900,  # 15 minutos
+                timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 options=[
                     ("NodeLimit", config["maxNodes"]),
@@ -178,7 +181,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             solver = pl.CPLEX_CMD(
                 msg=1,
                 threads=12,
-                timeLimit=900,  # 15 minutos
+                timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 maxNodes=config["maxNodes"],
             )
@@ -186,7 +189,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             solver = pl.PULP_CBC_CMD(
                 msg=1,
                 threads=12,
-                timeLimit=900,  # 15 minutos
+                timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 maxNodes=config["maxNodes"],
             )

@@ -1,7 +1,7 @@
 import csv
 
 
-def create_schedule_csv(variables, csv_name="schedule.csv"):
+def generate_schedule_csv(variables, csv_name="schedule.csv"):
     # Nos quedamos solo con las variables x que valen 1.
     schedule_vars = {}
     for v in variables:
@@ -12,6 +12,7 @@ def create_schedule_csv(variables, csv_name="schedule.csv"):
     max_day = 1
     max_turn = 1
     for var_name in schedule_vars:
+        # Las variables tienen la forma x_<uc>_<dia>_<turno>
         parts = var_name.split("_")
         _, _, day, turn = parts
         max_day = max(max_day, int(day))
@@ -25,10 +26,10 @@ def create_schedule_csv(variables, csv_name="schedule.csv"):
     # Procesamos cada una de las variables para agregarlas al schedule.
     for var_name in schedule_vars:
         parts = var_name.split("_")
-        _, course, day, turn = parts
+        _, uc, day, turn = parts
         day = int(day)
         turn = int(turn)
-        schedule[day][turn].append(course)
+        schedule[day][turn].append(uc)
 
     # Escribimos el archivo CSV.
     with open(csv_name, "w", newline="") as csvfile:
