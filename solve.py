@@ -3,6 +3,7 @@ from typing import TypedDict
 
 import os
 import pulp as pl
+import pandas as pd
 
 from csv_data_to_model_data import load_calendar_data
 
@@ -23,6 +24,17 @@ class Config(TypedDict):
 def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
+
+    # Remove courses with NaN values
+    invalid_courses = [c for c, v in datos["ins"].items() if pd.isna(v)]
+    if invalid_courses:
+        print(f"Warning: Removing courses with no inscription data: {invalid_courses}")
+        for c in invalid_courses:
+            del datos["ins"][c]
+            if c in datos["C"]:
+                datos["C"].remove(c)
+            # You might need to clean up other data structures that reference these courses
+            # like PARES_UC, COP, etc.
 
     D = datos.get("D")
     C = datos.get("C")
@@ -166,11 +178,12 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
     timeLimit = 900  # 15 minutos
+    # threads shouldn't be more than the number of physical cores
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
-                threads=12,
+                threads=8,
                 timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 options=[
@@ -180,7 +193,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
         case Solver.CPLEX_CMD:
             solver = pl.CPLEX_CMD(
                 msg=1,
-                threads=12,
+                threads=8,
                 timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 maxNodes=config["maxNodes"],
@@ -188,7 +201,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(
                 msg=1,
-                threads=12,
+                threads=8,
                 timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 maxNodes=config["maxNodes"],

@@ -35,9 +35,13 @@ def load_calendar_data(dir_name):
         # Turnos
         T = list(load_csv("turnos")["id"])
 
+
         # Profesores coincidentes
         cop_df = load_csv("profesores")
-        COP = [(row["uc_1"], row["uc_2"]) for _, row in cop_df.iterrows()]
+        COP = [(str(row["uc_1"]), str(row["uc_2"]))
+            for _, row in cop_df.iterrows()
+            if str(row["uc_1"]) in C and str(row["uc_2"]) in C]  # Only include if both courses exist in C
+
 
         # Turnos disponibles por día
         turnos_dia_df = load_csv("turnos_dias")
@@ -71,6 +75,7 @@ def load_calendar_data(dir_name):
         SUG = [
             (row["unidad_curricular"], row["semestre"], row["carrera"])
             for _, row in sug_df.iterrows()
+            if row["unidad_curricular"] in C  # Only include if UC exists in C
         ]
 
         # Pre-asignaciones
@@ -78,13 +83,17 @@ def load_calendar_data(dir_name):
         PA = {}
         for _, row in pa_df.iterrows():
             unidad_curricular = row["unidad_curricular"]
-            if unidad_curricular not in PA:
-                PA[unidad_curricular] = []
-            PA[unidad_curricular].append((row["dia"], row["turno"]))
+            if unidad_curricular in C:  # Only include if UC exists in C
+                if unidad_curricular not in PA:
+                    PA[unidad_curricular] = []
+                PA[unidad_curricular].append((row["dia"], row["turno"]))
 
         # Previaturas
         prev_df = load_csv("previas")
-        P = [(row["uc"], row["uc_requerida"]) for _, row in prev_df.iterrows()]
+        P = [(row["uc"], row["uc_requerida"])
+             for _, row in prev_df.iterrows()
+             if row["uc"] in C and row["uc_requerida"] in C  # Only include if both UCs exist in C
+             and row["uc"] != row["uc_requerida"]]  # Add this condition to filter out self-references
 
         # Pares frecuentes
         PARES_UC = list(combinations(C, 2))

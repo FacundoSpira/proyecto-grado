@@ -24,7 +24,7 @@ avg_cantidad_df = df.groupby(['cod1', 'cod2'])['cantidad'].mean().reset_index()
 avg_cantidad_df = avg_cantidad_df.sort_values(['cod1', 'cod2'])
 
 # Save to CSV files
-mapping_df.to_csv('materias_codigos.csv', index=False)
+mapping_df.to_csv('unidades_curriculares.csv', index=False)
 avg_cantidad_df.to_csv('promedio_concurrencia.csv', index=False)
 
 print("Files created successfully:")
