@@ -41,7 +41,6 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     Td = datos.get("Td")
     PA = datos.get("PA")
     COP = datos.get("COP")
-    P = datos.get("P")
     PARES_UC = datos.get("PARES_UC")
     UC_MISMO_SEMESTRE = datos.get("UC_MISMO_SEMESTRE")
     cp = datos.get("cp")
@@ -101,13 +100,6 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             for ds in DS
         )
         for c1, c2 in PARES_UC
-    ) - pl.lpSum(
-        # Para los pares de previas
-        pl.lpSum(
-            dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
-            for ds in DS
-        )
-        for c1, c2 in P
     )
     # endregion
 
@@ -177,7 +169,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    timeLimit = 900  # 15 minutos
+    timeLimit = 7200  # 2 hora
     # threads shouldn't be more than the number of physical cores
     match config["solver"]:
         case Solver.GUROBI_CMD:
@@ -188,6 +180,9 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
                 gapRel=config["gapRel"],
                 options=[
                     ("NodeLimit", config["maxNodes"]),
+                    ("BranchDir", 1),       # Prefer diving for depth-first search
+                    ("VarBranch", 2),       # Strong branching
+                    ("Presolve", 2),        # Aggressive presolve
                 ],
             )
         case Solver.CPLEX_CMD:

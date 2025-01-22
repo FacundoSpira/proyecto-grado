@@ -4,7 +4,12 @@ from generate_schedule import generate_schedule_csv
 
 if __name__ == "__main__":
     value, time, variables = solve_model(
-        "caso_lg_s_1_p_1", {"solver": Solver.GUROBI_CMD, "gapRel": 0.1, "maxNodes": 1500}
+        "caso_lg_s_1_p_1",
+        {
+            "solver": Solver.GUROBI_CMD,
+            "gapRel": 0.05,         # Tighter gap
+            "maxNodes": 3900,       # Keep reasonable node limit
+        }
     )
 
     print(f"Valor óptimo de la función objetivo: {value}")

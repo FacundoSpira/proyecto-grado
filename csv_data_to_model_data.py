@@ -88,13 +88,6 @@ def load_calendar_data(dir_name):
                     PA[unidad_curricular] = []
                 PA[unidad_curricular].append((row["dia"], row["turno"]))
 
-        # Previaturas
-        prev_df = load_csv("previas")
-        P = [(row["uc"], row["uc_requerida"])
-             for _, row in prev_df.iterrows()
-             if row["uc"] in C and row["uc_requerida"] in C  # Only include if both UCs exist in C
-             and row["uc"] != row["uc_requerida"]]  # Add this condition to filter out self-references
-
         # Pares frecuentes
         PARES_UC = list(combinations(C, 2))
 
@@ -177,7 +170,6 @@ def load_calendar_data(dir_name):
             "K": K,
             "SUG": SUG,
             "PA": PA,
-            "P": P,
             "COP": COP,
             "PARES_UC": PARES_UC,
             "UC_MISMO_SEMESTRE": UC_MISMO_SEMESTRE,
