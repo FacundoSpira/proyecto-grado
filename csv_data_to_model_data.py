@@ -35,13 +35,13 @@ def load_calendar_data(dir_name):
         # Turnos
         T = list(load_csv("turnos")["id"])
 
-
         # Profesores coincidentes
         cop_df = load_csv("profesores")
-        COP = [(str(row["uc_1"]), str(row["uc_2"]))
+        COP = [
+            (str(row["uc_1"]), str(row["uc_2"]))
             for _, row in cop_df.iterrows()
-            if str(row["uc_1"]) in C and str(row["uc_2"]) in C]  # Only include if both courses exist in C
-
+            if str(row["uc_1"]) in C and str(row["uc_2"]) in C
+        ]  # Only include if both courses exist in C
 
         # Turnos disponibles por día
         turnos_dia_df = load_csv("turnos_dias")
@@ -159,6 +159,14 @@ def load_calendar_data(dir_name):
         DS = get_ds(D)
         M = max(DS)
         dist_peso = {ds: 1 / (ds + 1) for ds in DS}
+
+        # Eliminar cursos sin valores de inscripción
+        invalid_courses = [c for c, v in ins.items() if pd.isna(v)]
+        if invalid_courses:
+            for c in invalid_courses:
+                del ins[c]
+                if c in C:
+                    C.remove(c)
 
         return {
             # Conjuntos

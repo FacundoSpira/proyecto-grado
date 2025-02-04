@@ -3,38 +3,19 @@ from typing import TypedDict
 
 import os
 import pulp as pl
-import pandas as pd
 
 from csv_data_to_model_data import load_calendar_data
-
-
-# Definición de un Enum para los diferentes solvers soportados
-class Solver:
-    CPLEX_CMD = "CPLEX_CMD"
-    GUROBI_CMD = "GUROBI_CMD"
-    PULP_CBC_CMD = "PULP_CBC_CMD"
+from constants import Solver, MINUTES
 
 
 class Config(TypedDict):
     solver: Solver
     gapRel: float
-    maxNodes: int
 
 
 def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
-
-    # Remove courses with NaN values
-    invalid_courses = [c for c, v in datos["ins"].items() if pd.isna(v)]
-    if invalid_courses:
-        print(f"Warning: Removing courses with no inscription data: {invalid_courses}")
-        for c in invalid_courses:
-            del datos["ins"][c]
-            if c in datos["C"]:
-                datos["C"].remove(c)
-            # You might need to clean up other data structures that reference these courses
-            # like PARES_UC, COP, etc.
 
     D = datos.get("D")
     C = datos.get("C")
@@ -169,37 +150,29 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    timeLimit = 7200  # 2 hora
-    # threads shouldn't be more than the number of physical cores
+    time_limit = 15 * MINUTES
+    cpu_cores = os.cpu_count() or 8
+
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
-                threads=8,
-                timeLimit=timeLimit,
+                threads=cpu_cores,
+                timeLimit=time_limit,
                 gapRel=config["gapRel"],
                 options=[
-                    ("NodeLimit", config["maxNodes"]),
-                    ("BranchDir", 1),       # Prefer diving for depth-first search
-                    ("VarBranch", 2),       # Strong branching
-                    ("Presolve", 2),        # Aggressive presolve
+                    ("BranchDir", 1),  # Preferir búsqueda en profundidad
+                    ("VarBranch", 2),  # Ramificación fuerte para selección de variables
+                    ("Presolve", 2),  # Pre-procesamiento agresivo
                 ],
             )
         case Solver.CPLEX_CMD:
             solver = pl.CPLEX_CMD(
-                msg=1,
-                threads=8,
-                timeLimit=timeLimit,
-                gapRel=config["gapRel"],
-                maxNodes=config["maxNodes"],
+                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
             )
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(
-                msg=1,
-                threads=8,
-                timeLimit=timeLimit,
-                gapRel=config["gapRel"],
-                maxNodes=config["maxNodes"],
+                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
             )
         case _:
             raise ValueError(f"Solver {config['solver']} no soportado")

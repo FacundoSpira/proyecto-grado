@@ -23,20 +23,20 @@ def generate_schedule_csv(variables, csv_name="schedule.csv"):
         i: {j: [] for j in range(1, max_turn + 1)} for i in range(1, max_day + 1)
     }
 
-    # Load the UC descriptions from CSV
+    # Cargamos las descripciones de las unidades curriculares.
     uc_descriptions = {}
-    with open('unidades_curriculares.csv', 'r') as f:
+    with open("data/unidades_curriculares.csv", "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            uc_descriptions[row['codigo']] = row['descripcion']
+            uc_descriptions[row["codigo"]] = row["descripcion"]
 
     # Procesamos cada una de las variables para agregarlas al schedule.
     for var_name in schedule_vars:
         parts = var_name.split("_")
         _, uc, day, turn = parts
 
-        # Look up the description for the UC code
-        uc_description = uc_descriptions.get(uc, uc)  # fallback to code if description not found
+        # Buscamos la descripción de la UC. Fallback al código si no se encuentra.
+        uc_description = uc_descriptions.get(uc, uc)
 
         day = int(day)
         turn = int(turn)

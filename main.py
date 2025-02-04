@@ -1,17 +1,18 @@
-from solve import solve_model, Solver
+from solve import solve_model
+from constants import Solver, Case
 from generate_schedule import generate_schedule_csv
-
+from datetime import datetime
 
 if __name__ == "__main__":
     value, time, variables = solve_model(
-        "caso_lg_s_1_p_1",
+        Case.large,
         {
             "solver": Solver.GUROBI_CMD,
-            "gapRel": 0.05,         # Tighter gap
-            "maxNodes": 3900,       # Keep reasonable node limit
-        }
+            "gapRel": 0.05,
+        },
     )
 
     print(f"Valor óptimo de la función objetivo: {value}")
     print(f"Tiempo de ejecución: {time:.2f} segundos")
-    generate_schedule_csv(variables, "schedule.csv")
+    timestamp = datetime.now().strftime("%Y.%m.%d_%H:%M:%S")
+    generate_schedule_csv(variables, f"output/schedule_{timestamp}.csv")
