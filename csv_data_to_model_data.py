@@ -37,7 +37,11 @@ def load_calendar_data(dir_name):
 
         # Profesores coincidentes
         cop_df = load_csv("profesores")
-        COP = [(row["uc_1"], row["uc_2"]) for _, row in cop_df.iterrows()]
+        COP = [
+            (str(row["uc_1"]), str(row["uc_2"]))
+            for _, row in cop_df.iterrows()
+            if str(row["uc_1"]) in C and str(row["uc_2"]) in C
+        ]  # Only include if both courses exist in C
 
         # Turnos disponibles por día
         turnos_dia_df = load_csv("turnos_dias")
@@ -71,6 +75,7 @@ def load_calendar_data(dir_name):
         SUG = [
             (row["unidad_curricular"], row["semestre"], row["carrera"])
             for _, row in sug_df.iterrows()
+            if row["unidad_curricular"] in C  # Only include if UC exists in C
         ]
 
         # Pre-asignaciones
@@ -78,13 +83,10 @@ def load_calendar_data(dir_name):
         PA = {}
         for _, row in pa_df.iterrows():
             unidad_curricular = row["unidad_curricular"]
-            if unidad_curricular not in PA:
-                PA[unidad_curricular] = []
-            PA[unidad_curricular].append((row["dia"], row["turno"]))
-
-        # Previaturas
-        prev_df = load_csv("previas")
-        P = [(row["uc"], row["uc_requerida"]) for _, row in prev_df.iterrows()]
+            if unidad_curricular in C:  # Only include if UC exists in C
+                if unidad_curricular not in PA:
+                    PA[unidad_curricular] = []
+                PA[unidad_curricular].append((row["dia"], row["turno"]))
 
         # Pares frecuentes
         PARES_UC = list(combinations(C, 2))
@@ -158,6 +160,14 @@ def load_calendar_data(dir_name):
         M = max(DS)
         dist_peso = {ds: 1 / (ds + 1) for ds in DS}
 
+        # Eliminar cursos sin valores de inscripción
+        invalid_courses = [c for c, v in ins.items() if pd.isna(v)]
+        if invalid_courses:
+            for c in invalid_courses:
+                del ins[c]
+                if c in C:
+                    C.remove(c)
+
         return {
             # Conjuntos
             "D": D,
@@ -168,7 +178,6 @@ def load_calendar_data(dir_name):
             "K": K,
             "SUG": SUG,
             "PA": PA,
-            "P": P,
             "COP": COP,
             "PARES_UC": PARES_UC,
             "UC_MISMO_SEMESTRE": UC_MISMO_SEMESTRE,

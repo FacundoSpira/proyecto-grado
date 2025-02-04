@@ -5,19 +5,12 @@ import os
 import pulp as pl
 
 from csv_data_to_model_data import load_calendar_data
-
-
-# Definición de un Enum para los diferentes solvers soportados
-class Solver:
-    CPLEX_CMD = "CPLEX_CMD"
-    GUROBI_CMD = "GUROBI_CMD"
-    PULP_CBC_CMD = "PULP_CBC_CMD"
+from constants import Solver, MINUTES
 
 
 class Config(TypedDict):
     solver: Solver
     gapRel: float
-    maxNodes: int
 
 
 def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
@@ -29,7 +22,6 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     Td = datos.get("Td")
     PA = datos.get("PA")
     COP = datos.get("COP")
-    P = datos.get("P")
     PARES_UC = datos.get("PARES_UC")
     UC_MISMO_SEMESTRE = datos.get("UC_MISMO_SEMESTRE")
     cp = datos.get("cp")
@@ -89,13 +81,6 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             for ds in DS
         )
         for c1, c2 in PARES_UC
-    ) - pl.lpSum(
-        # Para los pares de previas
-        pl.lpSum(
-            dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
-            for ds in DS
-        )
-        for c1, c2 in P
     )
     # endregion
 
@@ -165,33 +150,29 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    timeLimit = 900  # 15 minutos
+    time_limit = 15 * MINUTES
+    cpu_cores = os.cpu_count() or 8
+
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
-                threads=12,
-                timeLimit=timeLimit,
+                threads=cpu_cores,
+                timeLimit=time_limit,
                 gapRel=config["gapRel"],
                 options=[
-                    ("NodeLimit", config["maxNodes"]),
+                    ("BranchDir", 1),  # Preferir búsqueda en profundidad
+                    ("VarBranch", 2),  # Ramificación fuerte para selección de variables
+                    ("Presolve", 2),  # Pre-procesamiento agresivo
                 ],
             )
         case Solver.CPLEX_CMD:
             solver = pl.CPLEX_CMD(
-                msg=1,
-                threads=12,
-                timeLimit=timeLimit,
-                gapRel=config["gapRel"],
-                maxNodes=config["maxNodes"],
+                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
             )
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(
-                msg=1,
-                threads=12,
-                timeLimit=timeLimit,
-                gapRel=config["gapRel"],
-                maxNodes=config["maxNodes"],
+                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
             )
         case _:
             raise ValueError(f"Solver {config['solver']} no soportado")
