@@ -161,9 +161,11 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
                 timeLimit=time_limit,
                 gapRel=config["gapRel"],
                 options=[
-                    ("BranchDir", 1),  # Preferir búsqueda en profundidad
-                    ("VarBranch", 2),  # Ramificación fuerte para selección de variables
-                    ("Presolve", 2),  # Pre-procesamiento agresivo
+                    ("MIPFocus", 1),  # Enfocarse en buscar soluciones factibles rápido
+                    ("Presolve", 2),  # Presolución agresiva
+                    ("Cuts", 3),  # Generar cortes super agresivos
+                    ("Heuristics", 0.2),  # Aumentar el esfuerzo heurístico
+                    ("VarBranch", 3),  # Ramificación fuerte
                 ],
             )
         case Solver.CPLEX_CMD:
