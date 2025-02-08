@@ -32,6 +32,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     DS = datos.get("DS")
     M = datos.get("M")
     dist_peso = datos.get("dist_peso")
+    time_value = datos.get("time_value")
     # endregion
 
     # region DEFINICIÓN DEL PROBLEMA
@@ -123,12 +124,16 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     for c1, c2 in PARES_UC:
         # Calcular la diferencia entre los días asignados a c1 y c2
-        day_c1 = pl.lpSum(d * pl.lpSum(x[c1, d, t] for t in Td[d]) for d in D)
-        day_c2 = pl.lpSum(d * pl.lpSum(x[c2, d, t] for t in Td[d]) for d in D)
+        day_time_c1 = pl.lpSum(
+            time_value[(d, t)] * x[c1, d, t] for d in D for t in Td[d]
+        )
+        day_time_c2 = pl.lpSum(
+            time_value[(d, t)] * x[c2, d, t] for d in D for t in Td[d]
+        )
 
         # Restricciones para hacer que z valga efectivamente la diferencia absoluta
         problem += (
-            day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
+            day_time_c1 - day_time_c2 == z_plus[c1, c2] - z_minus[c1, c2],
             f"Diferencia_Dias_{c1}_{c2}",
         )
 
