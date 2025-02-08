@@ -3,6 +3,7 @@ from typing import TypedDict
 
 import os
 import pulp as pl
+import pandas as pd
 
 from csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
@@ -11,17 +12,30 @@ from constants import Solver, MINUTES
 class Config(TypedDict):
     solver: Solver
     gapRel: float
+    maxNodes: int
 
 
 def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
+    # Remove courses with NaN values
+    invalid_courses = [c for c, v in datos["ins"].items() if pd.isna(v)]
+    if invalid_courses:
+        print(f"Warning: Removing courses with no inscription data: {invalid_courses}")
+        for c in invalid_courses:
+            del datos["ins"][c]
+            if c in datos["C"]:
+                datos["C"].remove(c)
+            # You might need to clean up other data structures that reference these courses
+            # like PARES_UC, COP, etc.
+
     D = datos.get("D")
     C = datos.get("C")
     Td = datos.get("Td")
     PA = datos.get("PA")
     COP = datos.get("COP")
+    P = datos.get("P")
     PARES_UC = datos.get("PARES_UC")
     UC_MISMO_SEMESTRE = datos.get("UC_MISMO_SEMESTRE")
     cp = datos.get("cp")
@@ -81,6 +95,13 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             for ds in DS
         )
         for c1, c2 in PARES_UC
+    ) - pl.lpSum(
+        # Para los pares de previas
+        pl.lpSum(
+            dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
+            for ds in DS
+        )
+        for c1, c2 in P
     )
     # endregion
 
@@ -150,15 +171,14 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    time_limit = 15 * MINUTES
-    cpu_cores = os.cpu_count() or 8
-
+    timeLimit = 900  # 15 minutos
+    # threads shouldn't be more than the number of physical cores
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
-                threads=cpu_cores,
-                timeLimit=time_limit,
+                threads=8,
+                timeLimit=timeLimit,
                 gapRel=config["gapRel"],
                 options=[
                     ("MIPFocus", 1),  # Enfocarse en buscar soluciones factibles rápido

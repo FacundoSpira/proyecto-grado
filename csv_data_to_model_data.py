@@ -88,6 +88,16 @@ def load_calendar_data(dir_name):
                     PA[unidad_curricular] = []
                 PA[unidad_curricular].append((row["dia"], row["turno"]))
 
+        # Previaturas - Add debug logging
+        print("Loading previaturas...")
+        prev_df = load_csv("previas")
+        print("Previaturas data:")
+        print(prev_df.head())
+        P = [(str(row["uc"]), str(row["uc_requerida"]))  # Convert to string
+             for _, row in prev_df.iterrows()
+             if str(row["uc"]) in C and str(row["uc_requerida"]) in C  # Convert to string for comparison
+             and str(row["uc"]) != str(row["uc_requerida"])]
+
         # Pares frecuentes
         PARES_UC = list(combinations(C, 2))
 
@@ -117,15 +127,34 @@ def load_calendar_data(dir_name):
 
         # Inscriptos simultáneos
         co_df = load_csv("coincidencia")
-        co = {
-            (row["uc_1"], row["uc_2"]): row["coincidencia"]
-            for _, row in co_df.iterrows()
-        }
+        co = {}
 
-        # Completar co para todos los pares de UCs
-        co.update({(c1, c2): 0 for (c1, c2) in PARES_UC if (c1, c2) not in co})
-        co.update({(c2, c1): v for (c1, c2), v in co.items()})
-        co.update({(c, c): ins[c] for c in C})
+        # Build co dictionary with better error handling
+        for _, row in co_df.iterrows():
+            uc1, uc2 = row["uc_1"], row["uc_2"]
+            if uc1 not in C:
+                print(f"Warning: Course {uc1} from coincidence.csv not found in C")
+                continue
+            if uc2 not in C:
+                print(f"Warning: Course {uc2} from coincidence.csv not found in C")
+                continue
+            co[(uc1, uc2)] = row["coincidencia"]
+
+        # Complete co with safer updates
+        print("Completing co dictionary...")
+        for c1, c2 in PARES_UC:
+            if (c1, c2) not in co:
+                co[(c1, c2)] = 0
+
+        # Mirror the values
+        co.update({(c2, c1): v for (c1, c2), v in list(co.items())})
+
+        # Add diagonal values with error checking
+        for c in C:
+            if c not in ins:
+                print(f"Warning: No inscription data for course {c}")
+                ins[c] = 0  # or some default value
+            co[(c, c)] = ins[c]
 
         # Distancia en semestres (pre-calculada)
         def get_dist_sem(c1, c2):
@@ -178,6 +207,7 @@ def load_calendar_data(dir_name):
             "K": K,
             "SUG": SUG,
             "PA": PA,
+            "P": P,
             "COP": COP,
             "PARES_UC": PARES_UC,
             "UC_MISMO_SEMESTRE": UC_MISMO_SEMESTRE,
