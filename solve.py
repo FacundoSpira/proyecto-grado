@@ -171,14 +171,16 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    timeLimit = 900  # 15 minutos
+    time_limit = 15 * MINUTES
+    cpu_cores = os.cpu_count() or 8
+
     # threads shouldn't be more than the number of physical cores
     match config["solver"]:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
-                threads=8,
-                timeLimit=timeLimit,
+                threads=cpu_cores,
+                timeLimit=time_limit,
                 gapRel=config["gapRel"],
                 options=[
                     ("MIPFocus", 1),  # Enfocarse en buscar soluciones factibles rápido
