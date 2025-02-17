@@ -7,9 +7,7 @@ df_concurrencia = pd.read_csv(
 df_inscripciones = pd.read_csv("data/inscritos_por_uc_anio.csv")
 # endregion
 
-# region Procesar matriz de concurrencia
-
-# Crear mapeo de uc únicas a códigos
+# region Crear mapeo de uc únicas a códigos
 mapping_df1 = pd.DataFrame(
     {"descripcion": df_concurrencia["mat1"], "codigo": df_concurrencia["cod1"]}
 ).drop_duplicates()
@@ -22,6 +20,9 @@ mapping_df2 = pd.DataFrame(
 mapping_df = (
     pd.concat([mapping_df1, mapping_df2]).drop_duplicates().sort_values("descripcion")
 )
+# endregion
+
+# region Procesar matriz de concurrencia
 
 # Extraer el semestre directamente del último dígito del período
 df_concurrencia["semestre"] = df_concurrencia["nom_periodo"].str[-1].astype(int)
@@ -34,18 +35,16 @@ avg_concurrencia = (
 )
 
 # Crear DataFrames separados para cada semestre de concurrencia con formato coincidencia.csv
-avg_conc_sem1 = avg_concurrencia[avg_concurrencia["semestre"] == 1]
-avg_conc_sem2 = avg_concurrencia[avg_concurrencia["semestre"] == 2]
-
-# Formatear DataFrames de concurrencia
-avg_conc_sem1 = avg_conc_sem1.rename(
-    columns={"cod1": "uc_1", "cod2": "uc_2", "cantidad": "coincidencia"}
-).drop("semestre", axis=1)
-
-avg_conc_sem2 = avg_conc_sem2.rename(
-    columns={"cod1": "uc_1", "cod2": "uc_2", "cantidad": "coincidencia"}
-).drop("semestre", axis=1)
-
+avg_conc_sem1 = (
+    avg_concurrencia[avg_concurrencia["semestre"] == 1]
+    .rename(columns={"cod1": "uc_1", "cod2": "uc_2", "cantidad": "coincidencia"})
+    .drop("semestre", axis=1)
+)
+avg_conc_sem2 = (
+    avg_concurrencia[avg_concurrencia["semestre"] == 2]
+    .rename(columns={"cod1": "uc_1", "cod2": "uc_2", "cantidad": "coincidencia"})
+    .drop("semestre", axis=1)
+)
 # endregion
 
 # region Procesar inscripciones por semestre
@@ -65,17 +64,16 @@ avg_inscripciones = (
 )
 
 # Crear DataFrames separados para cada semestre de inscripciones con formato inscriptos.csv
-avg_insc_sem1 = avg_inscripciones[avg_inscripciones["semestre"] == 1]
-avg_insc_sem2 = avg_inscripciones[avg_inscripciones["semestre"] == 2]
-
-# Formatear DataFrames de inscripciones
-avg_insc_sem1 = avg_insc_sem1.rename(
-    columns={"codenservicio_mat": "uc", "cantidad": "inscriptos"}
-).drop("semestre", axis=1)
-
-avg_insc_sem2 = avg_insc_sem2.rename(
-    columns={"codenservicio_mat": "uc", "cantidad": "inscriptos"}
-).drop("semestre", axis=1)
+avg_insc_sem1 = (
+    avg_inscripciones[avg_inscripciones["semestre"] == 1]
+    .rename(columns={"codenservicio_mat": "uc", "cantidad": "inscriptos"})
+    .drop("semestre", axis=1)
+)
+avg_insc_sem2 = (
+    avg_inscripciones[avg_inscripciones["semestre"] == 2]
+    .rename(columns={"codenservicio_mat": "uc", "cantidad": "inscriptos"})
+    .drop("semestre", axis=1)
+)
 
 # Redondear valores de inscriptos a enteros
 avg_insc_sem1["inscriptos"] = avg_insc_sem1["inscriptos"].round().astype(int)
