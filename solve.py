@@ -1,5 +1,4 @@
 from timeit import default_timer as timer
-from typing import TypedDict
 
 import os
 import pulp as pl
@@ -8,12 +7,7 @@ from csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
 
-class Config(TypedDict):
-    solver: Solver
-    gapRel: float
-
-
-def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
+def solve_model(dir_name: str, solver_name: Solver) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -168,16 +162,15 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    time_limit = 15 * MINUTES
+    time_limit = 1 * MINUTES
     cpu_cores = os.cpu_count() or 8
 
-    match config["solver"]:
+    match solver_name:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
                 threads=cpu_cores,
                 timeLimit=time_limit,
-                gapRel=config["gapRel"],
                 options=[
                     ("MIPFocus", 1),  # Enfocarse en buscar soluciones factibles rápido
                     ("Presolve", 2),  # Presolución agresiva
@@ -187,15 +180,11 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
                 ],
             )
         case Solver.CPLEX_CMD:
-            solver = pl.CPLEX_CMD(
-                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
-            )
+            solver = pl.CPLEX_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case Solver.PULP_CBC_CMD:
-            solver = pl.PULP_CBC_CMD(
-                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
-            )
+            solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {config['solver']} no soportado")
+            raise ValueError(f"Solver {solver} no soportado")
 
     start_time = timer()
     problem.solve(solver)
@@ -203,17 +192,10 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     execution_time = end_time - start_time
 
-    if os.environ.get("DEBUG", "false") == "true":
-        print("Status:", pl.LpStatus[problem.status])
-
-        for v in problem.variables():
-            print(v.name, "=", v.varValue)
-
-        print("Valor óptimo de la función objetivo: ", pl.value(problem.objective))
-
-        print(f"Tiempo de ejecución: {execution_time:.2f} segundos")
-        print(f"                     {execution_time/60:.2f} minutos")
-        print(f"                     {execution_time/3600:.2f} horas")
-
-    return pl.value(problem.objective), execution_time, problem.variables()
+    return (
+        pl.value(problem.objective),
+        execution_time,
+        pl.LpStatus[problem.status],
+        problem.variables(),
+    )
     # endregion
