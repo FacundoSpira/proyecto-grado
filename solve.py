@@ -102,6 +102,19 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             f"AsignacionUnica_{c}",
         )
 
+    # En un turno no pueden haber mas de 4 evaluaciones ni menos de 1
+    for d in D:
+        for t in Td[d]:
+            problem += (
+                pl.lpSum(x[c, d, t] for c in C) <= 4,
+                f"MaximaEvaluacionesTurno_{d}_{t}",
+            )
+
+            problem += (
+                pl.lpSum(x[c, d, t] for c in C) >= 1,
+                f"MinimaEvaluacionesTurno_{d}_{t}",
+            )
+
     # Si dos UC están sugeridas en el mismo semestre para la misma carrera, se asignan a días distintos
     for d in D:
         for c1, c2 in UC_MISMO_SEMESTRE:
