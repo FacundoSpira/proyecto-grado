@@ -27,13 +27,13 @@ def load_calendar_data(dir_name):
         # ==== CONJUNTOS ====
 
         # Días del calendario
-        D = list(load_csv("dias")["id"])
+        D = sorted(list(load_csv("dias")["id"]))
 
         # Unidades curriculares
         C = list(load_csv("unidades_curriculares")["codigo"])
 
         # Turnos
-        T = list(load_csv("turnos")["id"])
+        T = sorted(list(load_csv("turnos")["id"]))
 
         # Profesores coincidentes
         cop_df = load_csv("profesores")
@@ -75,7 +75,7 @@ def load_calendar_data(dir_name):
         SUG = [
             (row["unidad_curricular"], row["semestre"], row["carrera"])
             for _, row in sug_df.iterrows()
-            if row["unidad_curricular"] in C  # Only include if UC exists in C
+            if row["unidad_curricular"] in C  # Solo incluir si la UC existe en C
         ]
 
         # Pre-asignaciones
@@ -83,7 +83,7 @@ def load_calendar_data(dir_name):
         PA = {}
         for _, row in pa_df.iterrows():
             unidad_curricular = row["unidad_curricular"]
-            if unidad_curricular in C:  # Only include if UC exists in C
+            if unidad_curricular in C:  # Solo incluir si la UC existe en C
                 if unidad_curricular not in PA:
                     PA[unidad_curricular] = []
                 PA[unidad_curricular].append((row["dia"], row["turno"]))
@@ -166,14 +166,25 @@ def load_calendar_data(dir_name):
         dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_UC}
         dist_sem.update({(c2, c1): v for (c1, c2), v in dist_sem.items()})
 
-        def get_ds(D):
-            distances = set()
-            for d1 in D:
-                for d2 in D:
-                    distances.add(abs(d1 - d2))
-            return sorted(list(distances))
+       # Determinar el máximo número de turnos
+        max_turns = max(len(Td[d]) for d in D)
 
-        DS = get_ds(D)
+        # Crear un diccionario para mapear cada par (día, turno) a un valor de tiempo
+        time_value = {}
+        for d in D:
+            sorted_turns = sorted(Td[d])
+            for index, t in enumerate(sorted_turns):
+                # Mapear el día a un entero y el turno a una fracción
+                time_value[(d, t)] = d + index / (max_turns + 1)
+
+        def get_ds_from_time(time_value):
+            differences = set()
+            for d1, t1 in time_value:
+                for d2, t2 in time_value:
+                    differences.add(abs(time_value[(d1, t1)] - time_value[(d2, t2)]))
+            return sorted(list(differences))
+
+        DS = get_ds_from_time(time_value)
         M = max(DS)
         dist_peso = {ds: 1 / (ds + 1) for ds in DS}
 
@@ -207,6 +218,7 @@ def load_calendar_data(dir_name):
             "co": co,
             "dist_sem": dist_sem,
             "dist_peso": dist_peso,
+            "time_value": time_value,
             # Constantes
             "M": M,
         }

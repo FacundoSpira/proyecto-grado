@@ -8,14 +8,7 @@ import pandas as pd
 from csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-
-class Config(TypedDict):
-    solver: Solver
-    gapRel: float
-    maxNodes: int
-
-
-def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
+def solve_model(dir_name: str, solver_name: Solver) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -46,6 +39,7 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     DS = datos.get("DS")
     M = datos.get("M")
     dist_peso = datos.get("dist_peso")
+    time_value = datos.get("time_value")
     # endregion
 
     # region DEFINICIÓN DEL PROBLEMA
@@ -122,6 +116,19 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
             f"AsignacionUnica_{c}",
         )
 
+    # En un turno no pueden haber mas de 4 evaluaciones ni menos de 1
+    for d in D:
+        for t in Td[d]:
+            problem += (
+                pl.lpSum(x[c, d, t] for c in C) <= 4,
+                f"MaximaEvaluacionesTurno_{d}_{t}",
+            )
+
+            problem += (
+                pl.lpSum(x[c, d, t] for c in C) >= 1,
+                f"MinimaEvaluacionesTurno_{d}_{t}",
+            )
+
     # Si dos UC están sugeridas en el mismo semestre para la misma carrera, se asignan a días distintos
     for d in D:
         for c1, c2 in UC_MISMO_SEMESTRE:
@@ -144,12 +151,16 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     for c1, c2 in PARES_UC:
         # Calcular la diferencia entre los días asignados a c1 y c2
-        day_c1 = pl.lpSum(d * pl.lpSum(x[c1, d, t] for t in Td[d]) for d in D)
-        day_c2 = pl.lpSum(d * pl.lpSum(x[c2, d, t] for t in Td[d]) for d in D)
+        day_time_c1 = pl.lpSum(
+            time_value[(d, t)] * x[c1, d, t] for d in D for t in Td[d]
+        )
+        day_time_c2 = pl.lpSum(
+            time_value[(d, t)] * x[c2, d, t] for d in D for t in Td[d]
+        )
 
         # Restricciones para hacer que z valga efectivamente la diferencia absoluta
         problem += (
-            day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
+            day_time_c1 - day_time_c2 == z_plus[c1, c2] - z_minus[c1, c2],
             f"Diferencia_Dias_{c1}_{c2}",
         )
 
@@ -175,13 +186,12 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
     cpu_cores = os.cpu_count() or 8
 
     # threads shouldn't be more than the number of physical cores
-    match config["solver"]:
+    match solver_name:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
                 msg=1,
                 threads=cpu_cores,
                 timeLimit=time_limit,
-                gapRel=config["gapRel"],
                 options=[
                     ("MIPFocus", 1),  # Enfocarse en buscar soluciones factibles rápido
                     ("Presolve", 2),  # Presolución agresiva
@@ -191,15 +201,11 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
                 ],
             )
         case Solver.CPLEX_CMD:
-            solver = pl.CPLEX_CMD(
-                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
-            )
+            solver = pl.CPLEX_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case Solver.PULP_CBC_CMD:
-            solver = pl.PULP_CBC_CMD(
-                msg=1, threads=cpu_cores, timeLimit=time_limit, gapRel=config["gapRel"]
-            )
+            solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {config['solver']} no soportado")
+            raise ValueError(f"Solver {solver} no soportado")
 
     start_time = timer()
     problem.solve(solver)
@@ -207,17 +213,10 @@ def solve_model(dir_name: str, config: Config) -> tuple[float, float, dict]:
 
     execution_time = end_time - start_time
 
-    if os.environ.get("DEBUG", "false") == "true":
-        print("Status:", pl.LpStatus[problem.status])
-
-        for v in problem.variables():
-            print(v.name, "=", v.varValue)
-
-        print("Valor óptimo de la función objetivo: ", pl.value(problem.objective))
-
-        print(f"Tiempo de ejecución: {execution_time:.2f} segundos")
-        print(f"                     {execution_time/60:.2f} minutos")
-        print(f"                     {execution_time/3600:.2f} horas")
-
-    return pl.value(problem.objective), execution_time, problem.variables()
+    return (
+        pl.value(problem.objective),
+        execution_time,
+        pl.LpStatus[problem.status],
+        problem.variables(),
+    )
     # endregion
