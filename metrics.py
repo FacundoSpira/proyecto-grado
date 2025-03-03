@@ -1,5 +1,6 @@
 import math
 import csv
+from itertools import combinations
 
 ALPHA = 0.5
 
@@ -87,7 +88,7 @@ def load_calendar(filename):
 
             for cell in row[1:]:
                 if cell.strip():
-                    courses.update(course.strip() for course in cell.split(","))
+                    courses.update(course.strip() for course in cell.split("&"))
 
             calendar[day] = courses
 
@@ -110,154 +111,127 @@ def generate_metrics(
     previatures = load_previatures(previatures_csv_name)
     suggested_uc = load_suggested_courses(suggested_csv_name)
 
-    metrics = {}
-    metrics["m_curricula"] = compute_m_curricula(
-        calendar=calendar,
-        uc_codes=uc_codes,
-        suggested_uc=suggested_uc,
-    )
-    metrics["m_coincidencia"] = compute_m_coincidencia(
-        calendar=calendar,
-        uc_codes=uc_codes,
-        coincidences=coincidences,
-    )
-    metrics["m_estudiantes"] = compute_m_estudiantes(
-        calendar=calendar,
-        uc_codes=uc_codes,
-        coincidences=coincidences,
-    )
-    metrics["m_previas"] = compute_m_previas(
-        calendar=calendar,
-        uc_codes=uc_codes,
-        previas=previatures,
-    )
+    # Generamos un diccionario, con el día donde se evalua el curso, dado su código
+    uc_day = {}
 
-    return metrics
-
-
-def compute_m_coincidencia(calendar, uc_codes, coincidences):
-    course_days = {}
     for day_label, courses in calendar.items():
         day_number = int(day_label.split()[-1])
         for course in courses:
             if course in uc_codes:
                 course_code = uc_codes[course]
-                course_days[course_code] = day_number
+                uc_day[course_code] = day_number
 
-    weighted_distance_sum = 0.0
-    total_coincidence_sum = 0.0
-    weighted_square_distance_sum = 0.0
+    metrics = {}
+    metrics["m_curricula"] = compute_m_curricula(
+        uc_day=uc_day,
+        suggested_uc=suggested_uc,
+    )
+    metrics["m_coincidencia"] = compute_m_coincidencia(
+        uc_day=uc_day,
+        coincidences=coincidences,
+    )
+    metrics["m_estudiantes"] = compute_m_estudiantes(
+        uc_day=uc_day,
+        coincidences=coincidences,
+    )
+    metrics["m_previas"] = compute_m_previas(
+        uc_day=uc_day,
+        previatures=previatures,
+    )
 
-    for (c1, c2), coincidence in coincidences.items():
-        if c1 in course_days and c2 in course_days:
-            z_distance = abs(course_days[c1] - course_days[c2])
-            weighted_distance_sum += coincidence * z_distance
-            weighted_square_distance_sum += coincidence * (z_distance**2)
-            total_coincidence_sum += coincidence
-
-    if total_coincidence_sum == 0:
-        return 0.0
-
-    z_bar = weighted_distance_sum / total_coincidence_sum
-    variance = (weighted_square_distance_sum / total_coincidence_sum) - (z_bar**2)
-    sigma = variance**0.5 if variance > 0 else 0.0
-
-    metric_previas = z_bar * (1 - ALPHA * (sigma / z_bar)) if z_bar > 0 else 0.0
-
-    return metric_previas
+    return metrics
 
 
-def compute_m_estudiantes(calendar, uc_codes, coincidences):
-    calendar_codes = {
-        day: {uc_codes[course] for course in courses if course in uc_codes}
-        for day, courses in calendar.items()
-    }
+def compute_m_coincidencia(uc_day, coincidences):
+    # Generamos un conjunto, con los pares de cursos.
+    PARES_CURSOS = list(combinations(uc_day.keys(), 2))
 
-    total_conflicts = 0.0
-    days = sorted(calendar_codes.keys(), key=lambda x: int(x.split()[-1]))
+    total_coincidences_sum = sum(
+        coincidences.get((c1, c2), 0.0) for c1, c2 in PARES_CURSOS
+    )
 
-    for i, day in enumerate(days):
-        courses_today = calendar_codes[day]
+    weighted_distance_sum = sum(
+        coincidences.get((c1, c2), 0.0) * abs(uc_day[c1] - uc_day[c2])
+        for c1, c2 in PARES_CURSOS
+    )
 
-        for c1 in courses_today:
-            for c2 in courses_today:
-                if c1 < c2:
-                    total_conflicts += coincidences.get((c1, c2), 0.0)
+    z_bar = weighted_distance_sum / total_coincidences_sum
 
-        if i < len(days) - 1:
-            next_day = days[i + 1]
-            courses_next_day = calendar_codes[next_day]
+    sigma_numerator = sum(
+        coincidences.get((c1, c2), 0.0) * (abs(uc_day[c1] - uc_day[c2]) - z_bar) ** 2
+        for c1, c2 in PARES_CURSOS
+    )
+    sigma = math.sqrt(sigma_numerator / total_coincidences_sum)
 
-            for c1 in courses_today:
-                for c2 in courses_next_day:
-                    total_conflicts += coincidences.get((c1, c2), 0.0)
+    metric_coincidencia = z_bar * (1 - ALPHA * (sigma / z_bar))
 
-    return total_conflicts
+    return metric_coincidencia
 
 
-def compute_m_curricula(calendar, uc_codes, suggested_uc):
-    course_days = {
-        uc_codes[c]: int(day.split()[-1])
-        for day, courses in calendar.items()
-        for c in courses
-        if c in uc_codes
-    }
+def compute_m_estudiantes(uc_day, coincidences):
+    # Generamos un conjunto, con los pares de cursos.
+    PARES_CURSOS = list(combinations(uc_day.keys(), 2))
 
+    total_conflicts_sum = sum(
+        coincidences.get((c1, c2), 0.0)
+        for c1, c2 in PARES_CURSOS
+        if abs(uc_day[c1] - uc_day[c2]) <= 1
+    )
+
+    return total_conflicts_sum
+
+
+def compute_m_curricula(uc_day, suggested_uc):
     distances = []
-    pairs_count = 0
 
-    for c1, s, k in suggested_uc:
-        for c2, s2, k2 in suggested_uc:
-            if (
-                s == s2
-                and k == k2
-                and c1 != c2
-                and c1 in course_days
-                and c2 in course_days
-            ):
-                z_distance = abs(course_days[c1] - course_days[c2])
-                distances.append(z_distance)
-                pairs_count += 1
+    # Agrupar cursos por semestre y carrera
+    semester_groups = {}
+    for c, s, k in suggested_uc:
+        # Solo considerar cursos que están en el calendario
+        if c in uc_day:
+            key = (s, k)
+            if key not in semester_groups:
+                semester_groups[key] = []
 
-    if pairs_count == 0:
+            semester_groups[key].append(c)
+
+    # Para cada grupo (mismo semestre y carrera), calcular las distancias
+    for courses in semester_groups.values():
+        for c1, c2 in combinations(courses, 2):
+            z_distance = abs(uc_day[c1] - uc_day[c2])
+            distances.append(z_distance)
+
+    if len(distances) == 0:
         return 0.0
 
-    z_curriculum = sum(distances) / pairs_count
+    z_curriculum = sum(distances) / len(distances)
 
-    variance = sum((z - z_curriculum) ** 2 for z in distances) / pairs_count
+    variance = sum((z - z_curriculum) ** 2 for z in distances) / len(distances)
     sigma_curriculum = math.sqrt(variance)
 
-    m_curriculum = (
-        z_curriculum * (1 - ALPHA * (sigma_curriculum / z_curriculum))
-        if z_curriculum > 0
-        else 0.0
-    )
+    m_curriculum = z_curriculum * (1 - ALPHA * (sigma_curriculum / z_curriculum))
 
     return m_curriculum
 
 
-def compute_m_previas(calendar, uc_codes, previas):
-    course_days = {
-        uc_codes[c]: int(day.split()[-1])
-        for day, courses in calendar.items()
-        for c in courses
-        if c in uc_codes
-    }
+def compute_m_previas(uc_day, previatures):
+    # Calculamos las previas que existen en el calendario.
+    PREVIAS = [
+        (c1, c2) for c1, c2 in previatures if c1 != c2 and c1 in uc_day and c2 in uc_day
+    ]
 
-    distances = []
-    pairs_count = 0
+    P = len(PREVIAS)
 
-    for c1, c2 in previas:
-        if c1 in course_days and c2 in course_days:
-            z_distance = abs(course_days[c1] - course_days[c2])
-            distances.append(z_distance)
-            pairs_count += 1
-
-    if pairs_count == 0:
+    if P == 0:
         return 0.0
 
-    z_previas = sum(distances) / pairs_count
-    variance = sum((z - z_previas) ** 2 for z in distances) / pairs_count
+    distance_previatures_sum = sum(abs(uc_day[c1] - uc_day[c2]) for c1, c2 in PREVIAS)
+
+    z_previas = distance_previatures_sum / P
+
+    variance = (
+        sum((abs(uc_day[c1] - uc_day[c2]) - z_previas) ** 2 for c1, c2 in PREVIAS) / P
+    )
     sigma_previas = math.sqrt(variance)
 
     m_previas = (

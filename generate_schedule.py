@@ -56,7 +56,7 @@ def generate_schedule_csv(variables, csv_name="schedule.csv"):
 
             # Procesamos cada turno
             for turn in range(1, max_turn + 1):
-                cell = ", ".join(schedule[day][turn]) if schedule[day][turn] else ""
+                cell = " & ".join(schedule[day][turn]) if schedule[day][turn] else ""
                 row.append(cell)
 
             writer.writerow(row)
