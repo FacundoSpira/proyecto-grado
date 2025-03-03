@@ -111,22 +111,22 @@ def generate_metrics(
     suggested_uc = load_suggested_courses(suggested_csv_name)
 
     metrics = {}
-    metrics["coherencia_curricular"] = compute_curriculum_consistency_metric(
+    metrics["m_curricula"] = compute_m_curricula(
         calendar=calendar,
         uc_codes=uc_codes,
         suggested_uc=suggested_uc,
     )
-    metrics["coincidencia_promedio"] = generate_weighted_average_for_coincidence_metric(
+    metrics["m_coincidencia"] = compute_m_coincidencia(
         calendar=calendar,
         uc_codes=uc_codes,
         coincidences=coincidences,
     )
-    metrics["estudiantes_afectados"] = generate_affected_student_metric(
+    metrics["m_estudiantes"] = compute_m_estudiantes(
         calendar=calendar,
         uc_codes=uc_codes,
         coincidences=coincidences,
     )
-    metrics["coherencia_previas"] = compute_previas_consistency_metric(
+    metrics["m_previas"] = compute_m_previas(
         calendar=calendar,
         uc_codes=uc_codes,
         previas=previatures,
@@ -135,7 +135,7 @@ def generate_metrics(
     return metrics
 
 
-def generate_weighted_average_for_coincidence_metric(calendar, uc_codes, coincidences):
+def compute_m_coincidencia(calendar, uc_codes, coincidences):
     course_days = {}
     for day_label, courses in calendar.items():
         day_number = int(day_label.split()[-1])
@@ -167,7 +167,7 @@ def generate_weighted_average_for_coincidence_metric(calendar, uc_codes, coincid
     return metric_previas
 
 
-def generate_affected_student_metric(calendar, uc_codes, coincidences):
+def compute_m_estudiantes(calendar, uc_codes, coincidences):
     calendar_codes = {
         day: {uc_codes[course] for course in courses if course in uc_codes}
         for day, courses in calendar.items()
@@ -195,7 +195,7 @@ def generate_affected_student_metric(calendar, uc_codes, coincidences):
     return total_conflicts
 
 
-def compute_curriculum_consistency_metric(calendar, uc_codes, suggested_uc):
+def compute_m_curricula(calendar, uc_codes, suggested_uc):
     course_days = {
         uc_codes[c]: int(day.split()[-1])
         for day, courses in calendar.items()
@@ -236,7 +236,7 @@ def compute_curriculum_consistency_metric(calendar, uc_codes, suggested_uc):
     return m_curriculum
 
 
-def compute_previas_consistency_metric(calendar, uc_codes, previas):
+def compute_m_previas(calendar, uc_codes, previas):
     course_days = {
         uc_codes[c]: int(day.split()[-1])
         for day, courses in calendar.items()
