@@ -71,28 +71,6 @@ def load_suggested_courses(suggested_file):
     return suggested_courses
 
 
-def load_calendar_in_turns(calendar_file):
-    calendar = {}
-
-    with open(calendar_file, newline="", encoding="utf-8") as file:
-        reader = csv.reader(file)
-        headers = next(reader)
-
-        for row in reader:
-            day = int(row[0].split(" ")[1])
-            calendar[day] = {}
-
-            for turn_idx in range(1, len(headers)):
-                if turn_idx < len(row) and row[turn_idx].strip():
-                    courses = [course.strip() for course in row[turn_idx].split(",")]
-                else:
-                    courses = []
-
-                calendar[day][turn_idx] = courses
-
-    return calendar
-
-
 def load_calendar(filename):
     calendar = {}
 
@@ -125,18 +103,12 @@ def generate_metrics(
     coincidences_csv_name,
     previatures_csv_name,
     suggested_csv_name,
-    enrollments_csv_name,
-    capacity_csv_name,
-    factor_cp,
 ):
     calendar = load_calendar(calendar_csv_name)
-    calendar_in_turns = load_calendar_in_turns(calendar_csv_name)
     uc_codes = load_course_codes(uc_csv_name)
     coincidences = load_coincidences(coincidences_csv_name)
     previatures = load_previatures(previatures_csv_name)
     suggested_uc = load_suggested_courses(suggested_csv_name)
-    enrollments = load_enrollments(enrollments_csv_name)
-    capacities = load_capacities(capacity_csv_name)
 
     metrics = {}
     metrics["coherencia_curricular"] = compute_curriculum_consistency_metric(
@@ -148,13 +120,6 @@ def generate_metrics(
         calendar=calendar,
         uc_codes=uc_codes,
         coincidences=coincidences,
-    )
-    metrics["capacidad_utilizada"] = compute_average_capacity_utilization(
-        calendar_in_turns=calendar_in_turns,
-        uc_codes=uc_codes,
-        enrollments=enrollments,
-        capacities=capacities,
-        capacity_factor=factor_cp,
     )
     metrics["estudiantes_afectados"] = generate_affected_student_metric(
         calendar=calendar,
@@ -230,35 +195,6 @@ def generate_affected_student_metric(calendar, uc_codes, coincidences):
     return total_conflicts
 
 
-def compute_average_capacity_utilization(
-    calendar_in_turns, uc_codes, enrollments, capacities, capacity_factor
-):
-    total_days = len(calendar_in_turns)
-    if total_days == 0:
-        return 0.0
-
-    daily_utilization = []
-
-    for day, turns in calendar_in_turns.items():
-        students_scheduled = sum(
-            enrollments.get(uc_codes[course], 0)
-            for turn_courses in turns.values()
-            for course in turn_courses
-            if course in uc_codes
-        )
-
-        total_capacity = sum(
-            capacity_factor * capacities.get((day, turn), 0) for turn in turns.keys()
-        )
-
-        if total_capacity > 0:
-            daily_utilization.append(students_scheduled / total_capacity)
-        else:
-            daily_utilization.append(0.0)
-
-    return sum(daily_utilization) / total_days if total_days > 0 else 0.0
-
-
 def compute_curriculum_consistency_metric(calendar, uc_codes, suggested_uc):
     course_days = {
         uc_codes[c]: int(day.split()[-1])
@@ -282,6 +218,7 @@ def compute_curriculum_consistency_metric(calendar, uc_codes, suggested_uc):
                 z_distance = abs(course_days[c1] - course_days[c2])
                 distances.append(z_distance)
                 pairs_count += 1
+
     if pairs_count == 0:
         return 0.0
 

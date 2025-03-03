@@ -9,9 +9,6 @@ metrics = generate_metrics(
     f"{CASE_PATH}/coincidencia.csv",
     f"{DATA_PATH}/previas.csv",
     f"{CASE_PATH}/trayectoria_sugerida.csv",
-    f"{CASE_PATH}/inscriptos.csv",
-    f"{CASE_PATH}/capacidad.csv",
-    1,
 )
 
 print(metrics)
