@@ -38,14 +38,14 @@ def load_capacities(capacity_file):
     return capacities
 
 
-def load_previas(file_name):
-    previas = []
+def load_previatures(file_name):
+    previatures = []
     with open(file_name, newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile)
         next(reader)
         for row in reader:
-            previas.append((row[0], row[1]))
-    return previas
+            previatures.append((row[0], row[1]))
+    return previatures
 
 
 def load_coincidences(filename):
@@ -125,50 +125,65 @@ def generate_metrics(
     coincidences_csv_name,
     previatures_csv_name,
     suggested_csv_name,
-    inscripts_csv_name,
+    enrollments_csv_name,
     capacity_csv_name,
     factor_cp,
 ):
+    calendar = load_calendar(calendar_csv_name)
+    calendar_in_turns = load_calendar_in_turns(calendar_csv_name)
+    uc_codes = load_course_codes(uc_csv_name)
+    coincidences = load_coincidences(coincidences_csv_name)
+    previatures = load_previatures(previatures_csv_name)
+    suggested_uc = load_suggested_courses(suggested_csv_name)
+    enrollments = load_enrollments(enrollments_csv_name)
+    capacities = load_capacities(capacity_csv_name)
+
     metrics = {}
     metrics["coherencia_curricular"] = compute_curriculum_consistency_metric(
-        calendar_csv_name, uc_csv_name, suggested_csv_name
+        calendar=calendar,
+        uc_codes=uc_codes,
+        suggested_uc=suggested_uc,
     )
     metrics["coincidencia_promedio"] = generate_weighted_average_for_coincidence_metric(
-        calendar_csv_name, uc_csv_name, coincidences_csv_name
+        calendar=calendar,
+        uc_codes=uc_codes,
+        coincidences=coincidences,
     )
     metrics["capacidad_utilizada"] = compute_average_capacity_utilization(
-        calendar_csv_name, uc_csv_name, inscripts_csv_name, capacity_csv_name, factor_cp
+        calendar_in_turns=calendar_in_turns,
+        uc_codes=uc_codes,
+        enrollments=enrollments,
+        capacities=capacities,
+        capacity_factor=factor_cp,
     )
     metrics["estudiantes_afectados"] = generate_affected_student_metric(
-        calendar_csv_name, uc_csv_name, coincidences_csv_name
+        calendar=calendar,
+        uc_codes=uc_codes,
+        coincidences=coincidences,
     )
     metrics["coherencia_previas"] = compute_previas_consistency_metric(
-        calendar_csv_name, uc_csv_name, previatures_csv_name
+        calendar=calendar,
+        uc_codes=uc_codes,
+        previas=previatures,
     )
 
     return metrics
 
 
-def generate_weighted_average_for_coincidence_metric(
-    calendar_name, courses_file_name, coincidence_file_name
-):
-    calendar = load_calendar(calendar_name)
-    course_dict = load_course_codes(courses_file_name)
-    coincidence_dict = load_coincidences(coincidence_file_name)
-
+def generate_weighted_average_for_coincidence_metric(calendar, uc_codes, coincidences):
     course_days = {}
     for day_label, courses in calendar.items():
         day_number = int(day_label.split()[-1])
         for course in courses:
-            if course in course_dict:
-                course_code = course_dict[course]
+            if course in uc_codes:
+                course_code = uc_codes[course]
                 course_days[course_code] = day_number
 
     weighted_distance_sum = 0.0
     total_coincidence_sum = 0.0
     weighted_square_distance_sum = 0.0
 
-    for (c1, c2), coincidence in coincidence_dict.items():
+    for (c1, c2), coincidence in coincidences.items():
         if c1 in course_days and c2 in course_days:
             z_distance = abs(course_days[c1] - course_days[c2])
             weighted_distance_sum += coincidence * z_distance
@@ -187,15 +202,9 @@ def generate_weighted_average_for_coincidence_metric(
     return metric_previas
 
 
-def generate_affected_student_metric(
-    calendar_name, courses_file_name, coincidence_file_name
-):
-    calendar = load_calendar(calendar_name)
-    course_dict = load_course_codes(courses_file_name)
-    coincidence_dict = load_coincidences(coincidence_file_name)
-
+def generate_affected_student_metric(calendar, uc_codes, coincidences):
     calendar_codes = {
-        day: {course_dict[course] for course in courses if course in course_dict}
+        day: {uc_codes[course] for course in courses if course in uc_codes}
         for day, courses in calendar.items()
     }
 
@@ -208,7 +217,7 @@ def generate_affected_student_metric(
         for c1 in courses_today:
             for c2 in courses_today:
                 if c1 < c2:
-                    total_conflicts += coincidence_dict.get((c1, c2), 0.0)
+                    total_conflicts += coincidences.get((c1, c2), 0.0)
 
         if i < len(days) - 1:
             next_day = days[i + 1]
@@ -216,31 +225,26 @@ def generate_affected_student_metric(
 
             for c1 in courses_today:
                 for c2 in courses_next_day:
-                    total_conflicts += coincidence_dict.get((c1, c2), 0.0)
+                    total_conflicts += coincidences.get((c1, c2), 0.0)
 
     return total_conflicts
 
 
 def compute_average_capacity_utilization(
-    calendar_name, courses_file_name, enrollment_file, capacity_file, capacity_factor
+    calendar_in_turns, uc_codes, enrollments, capacities, capacity_factor
 ):
-    calendar = load_calendar_in_turns(calendar_name)
-    course_dict = load_course_codes(courses_file_name)
-    enrollments = load_enrollments(enrollment_file)
-    capacities = load_capacities(capacity_file)
-
-    total_days = len(calendar)
+    total_days = len(calendar_in_turns)
     if total_days == 0:
         return 0.0
 
     daily_utilization = []
 
-    for day, turns in calendar.items():
+    for day, turns in calendar_in_turns.items():
         students_scheduled = sum(
-            enrollments.get(course_dict[course], 0)
+            enrollments.get(uc_codes[course], 0)
             for turn_courses in turns.values()
             for course in turn_courses
-            if course in course_dict
+            if course in uc_codes
         )
 
         total_capacity = sum(
@@ -255,25 +259,19 @@ def compute_average_capacity_utilization(
     return sum(daily_utilization) / total_days if total_days > 0 else 0.0
 
 
-def compute_curriculum_consistency_metric(
-    calendar_name, courses_file_name, suggested_file
-):
-    calendar = load_calendar(calendar_name)
-    course_dict = load_course_codes(courses_file_name)
-    suggested_courses = load_suggested_courses(suggested_file)
-
+def compute_curriculum_consistency_metric(calendar, uc_codes, suggested_uc):
     course_days = {
-        course_dict[c]: int(day.split()[-1])
+        uc_codes[c]: int(day.split()[-1])
         for day, courses in calendar.items()
         for c in courses
-        if c in course_dict
+        if c in uc_codes
     }
 
     distances = []
     pairs_count = 0
 
-    for c1, s, k in suggested_courses:
-        for c2, s2, k2 in suggested_courses:
+    for c1, s, k in suggested_uc:
+        for c2, s2, k2 in suggested_uc:
             if (
                 s == s2
                 and k == k2
@@ -301,16 +299,12 @@ def compute_curriculum_consistency_metric(
     return m_curriculum
 
 
-def compute_previas_consistency_metric(calendar_name, courses_file_name, previas_file):
-    calendar = load_calendar(calendar_name)
-    course_dict = load_course_codes(courses_file_name)
-    previas = load_previas(previas_file)
-
+def compute_previas_consistency_metric(calendar, uc_codes, previas):
     course_days = {
-        course_dict[c]: int(day.split()[-1])
+        uc_codes[c]: int(day.split()[-1])
         for day, courses in calendar.items()
         for c in courses
-        if c in course_dict
+        if c in uc_codes
     }
 
     distances = []
