@@ -1,3 +1,17 @@
 from metrics import generate_metrics
 
-generate_metrics("schedule_2025.02.03_22:26:05.csv", "unidades_curriculares.csv", "coincidencias.csv", "previas.csv", "sugeridos.csv", "inscriptos_sem1.csv", "capacidad.csv", 0.5, 1)
+DATA_PATH = "data"
+CASE_PATH = "casos/caso_lg"
+
+metrics = generate_metrics(
+    "output/schedule_2025.02.16_21:57:02.csv",
+    f"{DATA_PATH}/unidades_curriculares.csv",
+    f"{CASE_PATH}/coincidencia.csv",
+    f"{DATA_PATH}/previas.csv",
+    f"{CASE_PATH}/trayectoria_sugerida.csv",
+    f"{CASE_PATH}/inscriptos.csv",
+    f"{CASE_PATH}/capacidad.csv",
+    1,
+)
+
+print(metrics)
