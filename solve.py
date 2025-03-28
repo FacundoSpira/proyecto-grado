@@ -4,10 +4,10 @@ import os
 import pulp as pl
 import pandas as pd
 
-from con_turnos.csv_data_to_model_data import load_calendar_data
+from csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_minutes: int) -> tuple[float, float, str, dict]:
+def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, time_limit_minutes = 15) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -72,12 +72,12 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
         pl.lpSum(
             # Multiplicamos el peso de la distancia por la variable binaria correspondiente
             dist_peso[ds]
-            * (co[c1, c2] / max_co + 1 / (dist_sem[c1, c2] + 1))
+            * (co[c1, c2] / max_co + alpha * (1 / (dist_sem[c1, c2] + 1)))
             * w[c1, c2, ds]
             for ds in DS
         )
         for c1, c2 in PARES_UC
-    ) - alpha * pl.lpSum(
+    ) - beta * pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
             dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
@@ -173,7 +173,6 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
     time_limit = time_limit_minutes * MINUTES
     cpu_cores = os.cpu_count() or 8
 
-    # threads shouldn't be more than the number of physical cores
     match solver_name:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
@@ -186,6 +185,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
                     ("Cuts", 3),  # Generar cortes super agresivos
                     ("Heuristics", 0.2),  # Aumentar el esfuerzo heurístico
                     ("VarBranch", 3),  # Ramificación fuerte
+                    ("NoRelHeurWork", 5),
                 ],
             )
         case Solver.CPLEX_CMD:
@@ -193,7 +193,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {solver} no soportado")
+            raise ValueError(f"Solver {solver_name} no soportado")
 
     start_time = timer()
     problem.solve(solver)

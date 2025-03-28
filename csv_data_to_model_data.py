@@ -134,16 +134,6 @@ def load_calendar_data(dir_name):
         co.update({(c2, c1): v for (c1, c2), v in co.items()})
         co.update({(c, c): ins[c] for c in C})
 
-        # Mirror the values
-        co.update({(c2, c1): v for (c1, c2), v in list(co.items())})
-
-        # Add diagonal values with error checking
-        for c in C:
-            if c not in ins:
-                print(f"Warning: No inscription data for course {c}")
-                ins[c] = 0  # or some default value
-            co[(c, c)] = ins[c]
-
         # Distancia en semestres (pre-calculada)
         def get_dist_sem(c1, c2):
             careers_in_common = [
