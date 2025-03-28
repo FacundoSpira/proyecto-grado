@@ -11,7 +11,7 @@ if __name__ == "__main__":
     case = Case.large
 
     # Definir valores de alpha y beta a probar
-    alpha_values = [Weight.WEIGHT_1, Weight.WEIGHT_2, Weight.WEIGHT_3, Weight.WEIGHT_4]
+    alpha_values = [Weight.NO_WEIGHT, Weight.WEIGHT_1, Weight.WEIGHT_2, Weight.WEIGHT_3, Weight.WEIGHT_4]
     beta_values = [Weight.NO_WEIGHT, Weight.WEIGHT_1, Weight.WEIGHT_2, Weight.WEIGHT_3, Weight.WEIGHT_4]
 
     # Definir todas las combinaciones de alpha y beta
@@ -29,18 +29,23 @@ if __name__ == "__main__":
     for alpha, beta in parameter_combinations:
         print(f"\n{'='*80}")
         print(f"Ejecutando para alpha: {alpha}, beta: {beta}")
-        print(f"\n{'='*80}")
+        print(f"{'='*80}")
 
         value, time, status, variables = solve_model(case, solver, alpha, beta)
 
         print(f"Status {status}, valor {value}, tiempo {time:.2f} segundos")
+
+        if status != "Optimal":
+            with open(results_file, "a") as f:
+                f.write(f"{alpha},{beta},-,-,-,-\n")
+
+            continue
 
         # Generar timestamp para nombres de archivo únicos
         case_name = case.split('/')[-1]
         filename = f"{OUTPUT_DIR}/schedule_caso:{case_name}_alpha:{alpha}_beta:{beta}.csv"
 
         generate_schedule_csv(variables, filename)
-        print(f"Calendario guardado en: {filename}")
 
         # Ejecutar métricas
         metrics = generate_metrics(

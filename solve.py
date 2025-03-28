@@ -185,6 +185,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
                     ("Cuts", 3),  # Generar cortes super agresivos
                     ("Heuristics", 0.2),  # Aumentar el esfuerzo heurístico
                     ("VarBranch", 3),  # Ramificación fuerte
+                    ("NoRelHeurWork", 5),
                 ],
             )
         case Solver.CPLEX_CMD:
@@ -192,7 +193,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {solver} no soportado")
+            raise ValueError(f"Solver {solver_name} no soportado")
 
     start_time = timer()
     problem.solve(solver)
