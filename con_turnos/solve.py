@@ -1,5 +1,4 @@
 from timeit import default_timer as timer
-from typing import TypedDict
 
 import os
 import pulp as pl
@@ -205,7 +204,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, max_mins: int)
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {solver} no soportado")
+            raise ValueError(f"Solver {solver_name} no soportado")
 
     start_time = timer()
     problem.solve(solver)
