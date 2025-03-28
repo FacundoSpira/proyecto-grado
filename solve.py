@@ -4,10 +4,10 @@ import os
 import pulp as pl
 import pandas as pd
 
-from con_turnos.csv_data_to_model_data import load_calendar_data
+from csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_minutes: int) -> tuple[float, float, str, dict]:
+def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, time_limit_minutes = 15) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -72,12 +72,12 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
         pl.lpSum(
             # Multiplicamos el peso de la distancia por la variable binaria correspondiente
             dist_peso[ds]
-            * (co[c1, c2] / max_co + 1 / (dist_sem[c1, c2] + 1))
+            * (co[c1, c2] / max_co + alpha * (1 / (dist_sem[c1, c2] + 1)))
             * w[c1, c2, ds]
             for ds in DS
         )
         for c1, c2 in PARES_UC
-    ) - alpha * pl.lpSum(
+    ) - beta * pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
             dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
