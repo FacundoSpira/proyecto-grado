@@ -7,9 +7,20 @@ import pandas as pd
 from con_turnos.csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_minutes: int) -> tuple[float, float, str, dict]:
+def solve_model(dir_name: str, solver_name: Solver, alpha: float, max_mins: int) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
+
+    # Remove courses with NaN values
+    invalid_courses = [c for c, v in datos["ins"].items() if pd.isna(v)]
+    if invalid_courses:
+        print(f"Warning: Removing courses with no inscription data: {invalid_courses}")
+        for c in invalid_courses:
+            del datos["ins"][c]
+            if c in datos["C"]:
+                datos["C"].remove(c)
+            # You might need to clean up other data structures that reference these courses
+            # like PARES_UC, COP, etc.
 
     D = datos.get("D")
     C = datos.get("C")
@@ -170,7 +181,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    time_limit = time_limit_minutes * MINUTES
+    time_limit = max_mins * MINUTES
     cpu_cores = os.cpu_count() or 8
 
     # threads shouldn't be more than the number of physical cores
@@ -193,7 +204,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {solver} no soportado")
+            raise ValueError(f"Solver {solver_name} no soportado")
 
     start_time = timer()
     problem.solve(solver)

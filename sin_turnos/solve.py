@@ -2,12 +2,11 @@ from timeit import default_timer as timer
 
 import os
 import pulp as pl
-import pandas as pd
 
-from con_turnos.csv_data_to_model_data import load_calendar_data
+from sin_turnos.csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_minutes: int) -> tuple[float, float, str, dict]:
+def solve_model(dir_name: str, solver_name: Solver, alpha: float) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -27,7 +26,6 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
     DS = datos.get("DS")
     M = datos.get("M")
     dist_peso = datos.get("dist_peso")
-    time_value = datos.get("time_value")
     # endregion
 
     # region DEFINICIÓN DEL PROBLEMA
@@ -77,13 +75,13 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
             for ds in DS
         )
         for c1, c2 in PARES_UC
-    ) - alpha * pl.lpSum(
+    ) - alpha * (pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
             dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
             for ds in DS
         )
-        for c1, c2 in P
+        for c1, c2 in P)
     )
     # endregion
 
@@ -139,16 +137,12 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
 
     for c1, c2 in PARES_UC:
         # Calcular la diferencia entre los días asignados a c1 y c2
-        day_time_c1 = pl.lpSum(
-            time_value[(d, t)] * x[c1, d, t] for d in D for t in Td[d]
-        )
-        day_time_c2 = pl.lpSum(
-            time_value[(d, t)] * x[c2, d, t] for d in D for t in Td[d]
-        )
+        day_c1 = pl.lpSum(d * pl.lpSum(x[c1, d, t] for t in Td[d]) for d in D)
+        day_c2 = pl.lpSum(d * pl.lpSum(x[c2, d, t] for t in Td[d]) for d in D)
 
         # Restricciones para hacer que z valga efectivamente la diferencia absoluta
         problem += (
-            day_time_c1 - day_time_c2 == z_plus[c1, c2] - z_minus[c1, c2],
+            day_c1 - day_c2 == z_plus[c1, c2] - z_minus[c1, c2],
             f"Diferencia_Dias_{c1}_{c2}",
         )
 
@@ -170,7 +164,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    time_limit = time_limit_minutes * MINUTES
+    time_limit = 15 * MINUTES
     cpu_cores = os.cpu_count() or 8
 
     # threads shouldn't be more than the number of physical cores
@@ -193,7 +187,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
         case Solver.PULP_CBC_CMD:
             solver = pl.PULP_CBC_CMD(msg=1, threads=cpu_cores, timeLimit=time_limit)
         case _:
-            raise ValueError(f"Solver {solver} no soportado")
+            raise ValueError(f"Solver {solver_name} no soportado")
 
     start_time = timer()
     problem.solve(solver)

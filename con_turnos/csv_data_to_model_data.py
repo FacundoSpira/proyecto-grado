@@ -166,7 +166,7 @@ def load_calendar_data(dir_name):
         dist_sem = {(c1, c2): get_dist_sem(c1, c2) for c1, c2 in PARES_UC}
         dist_sem.update({(c2, c1): v for (c1, c2), v in dist_sem.items()})
 
-        # Determinar el máximo número de turnos
+       # Determinar el máximo número de turnos
         max_turns = max(len(Td[d]) for d in D)
 
         # Crear un diccionario para mapear cada par (día, turno) a un valor de tiempo
