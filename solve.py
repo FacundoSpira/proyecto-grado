@@ -173,7 +173,6 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
     time_limit = time_limit_minutes * MINUTES
     cpu_cores = os.cpu_count() or 8
 
-    # threads shouldn't be more than the number of physical cores
     match solver_name:
         case Solver.GUROBI_CMD:
             solver = pl.GUROBI_CMD(
