@@ -146,7 +146,7 @@ def generate_weighted_average_for_coincidence_metric(calendar_name, courses_file
     weighted_square_distance_sum = 0.0
 
     for (c1, c2), coincidence in coincidence_dict.items():
-        if c1 in course_days and c2 in course_days:
+        if c1 in course_days and c2 in course_days and c1 < c2:
             z_distance = abs(course_days[c1] - course_days[c2])
             weighted_distance_sum += coincidence * z_distance
             weighted_square_distance_sum += coincidence * (z_distance ** 2)
@@ -160,7 +160,14 @@ def generate_weighted_average_for_coincidence_metric(calendar_name, courses_file
     variance = (weighted_square_distance_sum / total_coincidence_sum) - (z_bar ** 2)
     sigma = variance ** 0.5 if variance > 0 else 0.0
 
+
     metric_previas = z_bar * (1 - alpha * (sigma / z_bar)) if z_bar > 0 else 0.0
+
+    print({
+        "z_bar": z_bar,
+        "sigma": sigma,
+        "metric_coincidence": metric_previas
+    })
 
     return metric_previas
 

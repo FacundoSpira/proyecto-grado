@@ -13,3 +13,19 @@ class Case:
     small = "casos/caso_sm"
     medium = "casos/caso_md"
     large = "casos/caso_lg"
+
+# Definición de un Enum para los diferentes valores de ponderación
+class Weight:
+    NO_WEIGHT = 0
+    WEIGHT_1 = 0.25
+    WEIGHT_2 = 0.5
+    WEIGHT_3 = 0.75
+    WEIGHT_4 = 1
+
+class TimeLimit:
+    SMALL = 15
+    MEDIUM = 30
+    LARGE = 60
+    XLARGE = 120
+    XXLARGE = 180
+    XXXLARGE = 240

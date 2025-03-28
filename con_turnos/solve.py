@@ -8,7 +8,7 @@ import pandas as pd
 from con_turnos.csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_minutes: int) -> tuple[float, float, str, dict]:
+def solve_model(dir_name: str, solver_name: Solver, alpha: float, max_mins: int) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -182,7 +182,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, time_limit_min
 
     # region SOLUCIÓN DEL PROBLEMA
     solver = None
-    time_limit = time_limit_minutes * MINUTES
+    time_limit = max_mins * MINUTES
     cpu_cores = os.cpu_count() or 8
 
     # threads shouldn't be more than the number of physical cores
