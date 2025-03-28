@@ -180,11 +180,11 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
                 threads=cpu_cores,
                 timeLimit=time_limit,
                 options=[
-                    ("MIPFocus", 3),  # Enfocarse en buscar soluciones factibles rápido
+                    ("MIPFocus", 2),  # Enfocarse en buscar soluciones factibles rápido
                     ("Presolve", 2),  # Presolución agresiva
-                    ("Cuts", 2),  # Generar cortes super agresivos
+                    ("Cuts", 3),  # Generar cortes super agresivos
                     ("Heuristics", 0.5),  # Aumentar el esfuerzo heurístico
-                    ("VarBranch", 2),  # Ramificación fuerte
+                    ("VarBranch", 3),  # Ramificación fuerte
                     ("NoRelHeurWork", 10),
                 ],
             )
