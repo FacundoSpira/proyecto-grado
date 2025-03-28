@@ -1,5 +1,4 @@
 from timeit import default_timer as timer
-from typing import TypedDict
 
 import os
 import pulp as pl

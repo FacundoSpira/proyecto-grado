@@ -15,6 +15,7 @@ if __name__ == "__main__":
         print(v.name, "=", v.varValue)
 
     print(f"Valor óptimo de la función objetivo: {value}")
+
     print(f"Tiempo de ejecución: {time:.2f} segundos")
     print(f"                     {time/60:.2f} minutos")
 

@@ -38,5 +38,6 @@ def convert_yaml_to_csv(yaml_file, csv_file):
             if rel[0] and rel[1]:  # Solo escribir si ambos códigos existen
                 writer.writerow(rel)
 
+
 # Convertir el archivo previas.yml a CSV
-convert_yaml_to_csv('previas.yml', 'previas.csv')
+convert_yaml_to_csv("data/previas.yml", "data/previas.csv")
