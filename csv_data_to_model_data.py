@@ -1,4 +1,5 @@
 import pandas as pd
+import math
 import os
 from itertools import combinations
 
@@ -176,7 +177,7 @@ def load_calendar_data(dir_name):
 
         DS = get_ds_from_time(time_value)
         M = max(DS)
-        dist_peso = {ds: 1 / (ds + 1) for ds in DS}
+        dist_peso = {ds: 1 / math.exp(0.3 * ds) for ds in DS}
 
         # Eliminar cursos sin valores de inscripción
         invalid_courses = [c for c, v in ins.items() if pd.isna(v)]

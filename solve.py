@@ -77,10 +77,10 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
             for ds in DS
         )
         for c1, c2 in PARES_UC
-    ) - beta * pl.lpSum(
+    ) + pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
-            dist_peso[ds] * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
+            beta * min(1, ds / 5) * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
             for ds in DS
         )
         for c1, c2 in P
@@ -180,12 +180,12 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
                 threads=cpu_cores,
                 timeLimit=time_limit,
                 options=[
-                    ("MIPFocus", 1),  # Enfocarse en buscar soluciones factibles rápido
+                    ("MIPFocus", 3),  # Enfocarse en buscar soluciones factibles rápido
                     ("Presolve", 2),  # Presolución agresiva
-                    ("Cuts", 3),  # Generar cortes super agresivos
-                    ("Heuristics", 0.2),  # Aumentar el esfuerzo heurístico
-                    ("VarBranch", 3),  # Ramificación fuerte
-                    ("NoRelHeurWork", 5),
+                    ("Cuts", 2),  # Generar cortes super agresivos
+                    ("Heuristics", 0.5),  # Aumentar el esfuerzo heurístico
+                    ("VarBranch", 2),  # Ramificación fuerte
+                    ("NoRelHeurWork", 10),
                 ],
             )
         case Solver.CPLEX_CMD:
