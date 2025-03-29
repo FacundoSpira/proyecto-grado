@@ -4,7 +4,7 @@ from generate_schedule import generate_schedule_csv
 from datetime import datetime
 
 if __name__ == "__main__":
-    value, time, status, variables = solve_model(Case.large, Solver.GUROBI_CMD, 1, 0.5, 5)
+    value, time, status, variables = solve_model(Case.large, Solver.GUROBI_CMD, 1, 0, 15)
 
     print("Status:", status)
 

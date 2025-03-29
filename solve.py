@@ -104,17 +104,12 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
             f"AsignacionUnica_{c}",
         )
 
-    # En un turno no pueden haber mas de 4 evaluaciones ni menos de 1
+    # En un turno no pueden haber mas de 6 evaluaciones
     for d in D:
         for t in Td[d]:
             problem += (
-                pl.lpSum(x[c, d, t] for c in C) <= 4,
+                pl.lpSum(x[c, d, t] for c in C) <= 6,
                 f"MaximaEvaluacionesTurno_{d}_{t}",
-            )
-
-            problem += (
-                pl.lpSum(x[c, d, t] for c in C) >= 1,
-                f"MinimaEvaluacionesTurno_{d}_{t}",
             )
 
     # Si dos UC están sugeridas en el mismo semestre para la misma carrera, se asignan a días distintos
@@ -166,6 +161,13 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
             z_minus[c1, c2] <= M * (1 - y[c1, c2]),
             f"Control_z_minus_{c1}_{c2}",
         )
+
+        # Si dos cursos tienen alta coincidencia, deben asignarse al menos con una separacion de 2 dias.
+        if co[c1,c2] >= 60:
+            problem += (
+                z[c1,c2] >= 2,
+                f"Separacion_Minima_{c1}_{c2}",
+            )
     # endregion
 
     # region SOLUCIÓN DEL PROBLEMA
