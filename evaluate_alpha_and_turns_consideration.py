@@ -11,18 +11,18 @@ if __name__ == "__main__":
     case = Case.large
 
     # Definir valores de alpha y beta a probar
-    alpha_values = [Weight.NO_WEIGHT, Weight.WEIGHT_1, Weight.WEIGHT_2, Weight.WEIGHT_3, Weight.WEIGHT_4]
+    alpha_values = [Weight.WEIGHT_4]
     beta_values = [Weight.NO_WEIGHT, Weight.WEIGHT_1, Weight.WEIGHT_2, Weight.WEIGHT_3, Weight.WEIGHT_4]
 
     # Definir todas las combinaciones de alpha y beta
     parameter_combinations = list(product(alpha_values, beta_values))
 
-    OUTPUT_DIR = "output_parameters"
+    OUTPUT_DIR = "results_parameters_alpha:1"
     # Crear directorio de salida si no existe
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # Crear archivo de resultados
-    results_file = "results_parameters.csv"
+    results_file = "results_file_alpha:1.csv"
     with open(results_file, "w") as f:
         f.write("alpha,beta,m_curricula,m_coincidencia,m_estudiantes,m_previas\n")
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         print(f"Ejecutando para alpha: {alpha}, beta: {beta}")
         print(f"{'='*80}")
 
-        value, time, status, variables = solve_model(case, solver, alpha, beta)
+        value, time, status, variables = solve_model(case, solver, alpha, beta, 60)
 
         print(f"Status {status}, valor {value}, tiempo {time:.2f} segundos")
 
