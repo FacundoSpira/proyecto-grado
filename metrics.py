@@ -1,35 +1,9 @@
 import math
 import csv
+import re
 from itertools import combinations
 
 ALPHA = 0.5
-
-
-# region FUNCIONES PARA CARGAR DATOS
-def load_course_codes(filename):
-    course_dict = {}
-    reader = csv.reader(filename)
-    rows = [row for row in reader]
-
-    for row in rows[1:]:
-        for cell in row[1:]:
-            cell = cell.strip()
-
-            if not cell:  # Empty cell, preserve as is
-                continue
-
-            if "&" in cell:
-                cell = cell.replace('"', '')
-
-            courses = [course.strip() for course in cell.split("&")]
-
-            for course in courses:
-                match = re.match(r"(.+?) \((\d+)\)$", course_string)
-                if match:
-                    course_dict[match.group(1)] = match.group(2)
-
-    return course_dict
-
 
 def load_enrollments(enrollment_file):
     enrollments = {}
@@ -87,7 +61,10 @@ def load_suggested_courses(suggested_file):
 
 
 def load_calendar(filename):
+    uc_day = {}
     calendar = {}
+    codes = {}
+    reader = csv.reader(filename)
 
     with open(filename, mode="r", encoding="utf-8") as file:
         reader = csv.reader(file)
@@ -104,36 +81,39 @@ def load_calendar(filename):
                 if cell.strip():
                     courses.update(course.strip() for course in cell.split("&"))
 
+                    for course in courses:
+                        match = re.match(r"(.+?) \((\d+)\)$", course)
+                        if match:
+                            codes[match.group(1)] = match.group(2)
+
             calendar[day] = courses
 
-    return calendar
+    for day_label, courses in calendar.items():
+        day_number = int(day_label.split()[-1])
+        for course in courses:
+            match = re.match(r"(.+?) \((\d+)\)$", course)
+            if match:
+                course_name = match.group(1)
 
+                if course_name in codes:
+                    course_code = codes[course_name]
+                    uc_day[course_code] = day_number
+
+    return uc_day
 
 # endregion
 
 
 def generate_metrics(
     calendar_csv_name,
-    uc_csv_name,
     coincidences_csv_name,
     previatures_csv_name,
     suggested_csv_name,
 ):
-    calendar = load_calendar(calendar_csv_name)
-    uc_codes = load_course_codes(uc_csv_name)
+    uc_day = load_calendar(calendar_csv_name)
     coincidences = load_coincidences(coincidences_csv_name)
     previatures = load_previatures(previatures_csv_name)
     suggested_uc = load_suggested_courses(suggested_csv_name)
-
-    # Generamos un diccionario, con el día donde se evalua el curso, dado su código
-    uc_day = {}
-
-    for day_label, courses in calendar.items():
-        day_number = int(day_label.split()[-1])
-        for course in courses:
-            if course in uc_codes:
-                course_code = uc_codes[course]
-                uc_day[course_code] = day_number
 
     metrics = {}
     metrics["m_curricula"] = compute_m_curricula(

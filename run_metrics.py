@@ -10,7 +10,6 @@ if __name__ == "__main__":
 
     metrics = generate_metrics(
         schedule_file,
-        f"{DATA_PATH}/unidades_curriculares.csv",
         f"{CASE_PATH}/coincidencia.csv",
         f"{DATA_PATH}/previas.csv",
         f"{CASE_PATH}/trayectoria_sugerida.csv",
