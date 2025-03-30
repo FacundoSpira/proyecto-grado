@@ -8,12 +8,26 @@ ALPHA = 0.5
 # region FUNCIONES PARA CARGAR DATOS
 def load_course_codes(filename):
     course_dict = {}
-    with open(filename, mode="r", encoding="utf-8") as file:
-        reader = csv.reader(file)
-        next(reader)
-        for row in reader:
-            name, code = row
-            course_dict[name] = code
+    reader = csv.reader(filename)
+    rows = [row for row in reader]
+
+    for row in rows[1:]:
+        for cell in row[1:]:
+            cell = cell.strip()
+
+            if not cell:  # Empty cell, preserve as is
+                continue
+
+            if "&" in cell:
+                cell = cell.replace('"', '')
+
+            courses = [course.strip() for course in cell.split("&")]
+
+            for course in courses:
+                match = re.match(r"(.+?) \((\d+)\)$", course_string)
+                if match:
+                    course_dict[match.group(1)] = match.group(2)
+
     return course_dict
 
 
