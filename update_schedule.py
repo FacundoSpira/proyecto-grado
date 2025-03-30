@@ -71,4 +71,8 @@ def update_schedule(schedule_file, codes_file, actual_courses_file):
 
 
 if __name__ == "__main__":
-    update_schedule("ema_schedule.csv", "data/unidades_curriculares.csv", "casos/caso_lg/unidades_curriculares.csv")
+    update_schedule(
+        "ema_schedule.csv",
+        "data/unidades_curriculares.csv",
+        "casos/caso_lg/unidades_curriculares.csv",
+    )

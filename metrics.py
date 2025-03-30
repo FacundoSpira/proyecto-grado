@@ -5,6 +5,7 @@ from itertools import combinations
 
 ALPHA = 0.5
 
+
 def load_enrollments(enrollment_file):
     enrollments = {}
     with open(enrollment_file, newline="", encoding="utf-8") as file:
@@ -62,8 +63,6 @@ def load_suggested_courses(suggested_file):
 
 def load_calendar(filename):
     uc_day = {}
-    calendar = {}
-    codes = {}
     reader = csv.reader(filename)
 
     with open(filename, mode="r", encoding="utf-8") as file:
@@ -74,32 +73,24 @@ def load_calendar(filename):
             if not row:
                 continue
 
-            day = row[0].strip()
-            courses = set()
+            day_string = row[0].strip()
+            day = int(day_string.split(" ")[-1])
 
             for cell in row[1:]:
                 if cell.strip():
-                    courses.update(course.strip() for course in cell.split("&"))
+                    ucs = cell.split(" & ")
 
-                    for course in courses:
-                        match = re.match(r"(.+?) \((\d+)\)$", course)
-                        if match:
-                            codes[match.group(1)] = match.group(2)
+                    for uc in ucs:
+                        match = re.match(r"^(.+) \((.+)\)$", uc)
+                        if not match:
+                            raise (
+                                "Calendario invalido. No es posible generar métricas"
+                            )
 
-            calendar[day] = courses
-
-    for day_label, courses in calendar.items():
-        day_number = int(day_label.split()[-1])
-        for course in courses:
-            match = re.match(r"(.+?) \((\d+)\)$", course)
-            if match:
-                course_name = match.group(1)
-
-                if course_name in codes:
-                    course_code = codes[course_name]
-                    uc_day[course_code] = day_number
+                        uc_day[match.group(2)] = day
 
     return uc_day
+
 
 # endregion
 
