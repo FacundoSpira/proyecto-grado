@@ -12,7 +12,13 @@ if __name__ == "__main__":
 
     # Definir valores de alpha y beta a probar
     alpha_values = [Weight.WEIGHT_4]
-    beta_values = [Weight.NO_WEIGHT, Weight.WEIGHT_1, Weight.WEIGHT_2, Weight.WEIGHT_3, Weight.WEIGHT_4]
+    beta_values = [
+        Weight.NO_WEIGHT,
+        Weight.WEIGHT_1,
+        Weight.WEIGHT_2,
+        Weight.WEIGHT_3,
+        Weight.WEIGHT_4,
+    ]
 
     # Definir todas las combinaciones de alpha y beta
     parameter_combinations = list(product(alpha_values, beta_values))
@@ -42,15 +48,16 @@ if __name__ == "__main__":
             continue
 
         # Generar timestamp para nombres de archivo únicos
-        case_name = case.split('/')[-1]
-        filename = f"{OUTPUT_DIR}/schedule_caso:{case_name}_alpha:{alpha}_beta:{beta}.csv"
+        case_name = case.split("/")[-1]
+        filename = (
+            f"{OUTPUT_DIR}/schedule_caso:{case_name}_alpha:{alpha}_beta:{beta}.csv"
+        )
 
         generate_schedule_csv(variables, filename)
 
         # Ejecutar métricas
         metrics = generate_metrics(
             filename,
-            "data/unidades_curriculares.csv",
             f"{case}/coincidencia.csv",
             f"data/previas.csv",
             f"{case}/trayectoria_sugerida.csv",
@@ -58,7 +65,8 @@ if __name__ == "__main__":
 
         # Escribir resultados en el archivo de resultados
         with open(results_file, "a") as f:
-            f.write(f"{alpha},{beta},{metrics['m_curricula']},{metrics['m_coincidencia']},{metrics['m_estudiantes']},{metrics['m_previas']}\n")
-
+            f.write(
+                f"{alpha},{beta},{metrics['m_curricula']},{metrics['m_coincidencia']},{metrics['m_estudiantes']},{metrics['m_previas']}\n"
+            )
 
     print("\nTodos los modelos completados!")

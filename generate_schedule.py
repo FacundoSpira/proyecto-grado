@@ -28,7 +28,7 @@ def generate_schedule_csv(variables, csv_name="schedule.csv"):
     with open("data/unidades_curriculares.csv", "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            uc_descriptions[row["codigo"]] = row["descripcion"]
+            uc_descriptions[row["codigo"]] = row["descripcion"] + " (" + row["codigo"] + ")"
 
     # Procesamos cada una de las variables para agregarlas al schedule.
     for var_name in schedule_vars:
