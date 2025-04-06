@@ -14,6 +14,8 @@ class Case:
     medium = "casos/caso_md"
     large_1s1p = "casos/caso_1s1p"
     large_1s2p = "casos/caso_1s2p"
+    large_2s1p = "casos/caso_2s1p"
+    large_2s2p = "casos/caso_2s2p"
 
 # Definición de un Enum para los diferentes valores de ponderación
 class Weight:
