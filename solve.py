@@ -7,7 +7,10 @@ import pandas as pd
 from csv_data_to_model_data import load_calendar_data
 from constants import Solver, MINUTES
 
-def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, time_limit_minutes = 15) -> tuple[float, float, str, dict]:
+
+def solve_model(
+    dir_name: str, solver_name: Solver, alpha: float, beta: float, time_limit_minutes=15
+) -> tuple[float, float, str, dict]:
     # region CARGA DE DATOS
     datos = load_calendar_data(dir_name)
 
@@ -80,7 +83,9 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
     ) + pl.lpSum(
         # Para los pares de previas
         pl.lpSum(
-            beta * min(1, ds / 5) * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
+            beta
+            * min(1, ds / 5)
+            * (w[c1, c2, ds] if (c1, c2, ds) in w else w[c2, c1, ds])
             for ds in DS
         )
         for c1, c2 in P
@@ -163,9 +168,9 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
         )
 
         # Si dos cursos tienen alta coincidencia, deben asignarse al menos con una separacion de 2 dias.
-        if co[c1,c2] >= 100:
+        if co[c1, c2] >= 60:
             problem += (
-                z[c1,c2] >= 2,
+                z[c1, c2] >= 2,
                 f"Separacion_Minima_{c1}_{c2}",
             )
     # endregion

@@ -4,7 +4,9 @@ from generate_schedule import generate_schedule_csv
 from datetime import datetime
 
 if __name__ == "__main__":
-    value, time, status, variables = solve_model(Case.large_2s1p, Solver.GUROBI_CMD, 0.5, 0.5, 180)
+    value, time, status, variables = solve_model(
+        Case.large_2s1p, Solver.GUROBI_CMD, 0.5, 0.5, 180
+    )
 
     print("Status:", status)
 
@@ -19,5 +21,4 @@ if __name__ == "__main__":
     print(f"Tiempo de ejecución: {time:.2f} segundos")
     print(f"                     {time/60:.2f} minutos")
 
-    timestamp = datetime.now().strftime("%Y.%m.%d_%H:%M:%S")
     generate_schedule_csv(variables, f"schedule_2s1p.csv")
