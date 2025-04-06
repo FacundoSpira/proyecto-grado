@@ -12,7 +12,8 @@ class Solver:
 class Case:
     small = "casos/caso_sm"
     medium = "casos/caso_md"
-    large = "casos/caso_lg"
+    large_1s1p = "casos/caso_1s1p"
+    large_1s2p = "casos/caso_1s2p"
 
 # Definición de un Enum para los diferentes valores de ponderación
 class Weight:

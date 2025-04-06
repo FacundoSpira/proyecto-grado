@@ -3,11 +3,11 @@ import sys
 import os
 
 DATA_PATH = "data"
-CASE_PATH = "casos/caso_lg"
+CASE_PATH = "casos/caso_1s2p"
 
 
 if __name__ == "__main__":
-    schedule_file = sys.argv[1] if len(sys.argv) > 1 else "ema_schedule.csv"
+    schedule_file = sys.argv[1] if len(sys.argv) > 1 else "ema_schedule_1s2p.csv"
 
     metrics = generate_metrics(
         schedule_file,

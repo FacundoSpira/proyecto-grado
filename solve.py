@@ -163,7 +163,7 @@ def solve_model(dir_name: str, solver_name: Solver, alpha: float, beta: float, t
         )
 
         # Si dos cursos tienen alta coincidencia, deben asignarse al menos con una separacion de 2 dias.
-        if co[c1,c2] >= 60:
+        if co[c1,c2] >= 100:
             problem += (
                 z[c1,c2] >= 2,
                 f"Separacion_Minima_{c1}_{c2}",
