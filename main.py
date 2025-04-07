@@ -5,7 +5,7 @@ from datetime import datetime
 
 if __name__ == "__main__":
     value, time, status, variables = solve_model(
-        Case.large_2s1p, Solver.GUROBI_CMD, 0.5, 0.5, 180
+        Case.large_1s2p, Solver.GUROBI_CMD, 0.5, 0.5, 480
     )
 
     print("Status:", status)
