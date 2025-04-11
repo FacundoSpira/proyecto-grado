@@ -1,0 +1,274 @@
+Set parameter LicenseID to value 2609781
+Set parameter TimeLimit to value 21600
+Set parameter Heuristics to value 0.5
+Set parameter MIPFocus to value 2
+Set parameter NoRelHeurWork to value 10
+Set parameter VarBranch to value 3
+Set parameter Cuts to value 3
+Set parameter LogFile to value "gurobi.log"
+Set parameter Presolve to value 2
+Set parameter Threads to value 8
+Using license file /Users/florenciacarle/gurobi.lic
+
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (mac64[arm] - Darwin 23.4.0 23E224)
+Copyright (c) 2024, Gurobi Optimization, LLC
+
+Read LP format model from file /var/folders/24/cmnyy3hn5jl4xb1lz3p1qy080000gn/T/e484db144f8d43678ae18bb16f5a7694-pulp.lp
+Reading time = 0.22 seconds
+OBJ: 25300 rows, 154881 columns, 477833 nonzeros
+
+Using Gurobi shared library /Library/gurobi1200/macos_universal2/lib/libgurobi120.dylib
+
+CPU model: Apple M1
+Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
+
+Non-default parameters:
+TimeLimit  21600
+Heuristics  0.5
+MIPFocus  2
+NoRelHeurWork  10
+VarBranch  3
+Cuts  3
+Presolve  2
+Threads  8
+
+Optimize a model with 25300 rows, 154881 columns and 477833 nonzeros
+Model fingerprint: 0x11bf5bed
+Variable types: 11485 continuous, 143396 integer (143396 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 1e+03]
+  Objective range  [6e-03, 4e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+03]
+Presolve removed 5786 rows and 4060 columns
+Presolve time: 1.39s
+Presolved: 19514 rows, 150821 columns, 455363 nonzeros
+Variable types: 7656 continuous, 143165 integer (143132 binary)
+Starting NoRel heuristic
+Found phase-1 solution: relaxation 20020.8
+Found phase-1 solution: relaxation 19403
+Found phase-1 solution: relaxation 19266.2
+Found phase-1 solution: relaxation 19232
+Found phase-1 solution: relaxation 15880.9
+Found phase-1 solution: relaxation 12287.9
+Found phase-1 solution: relaxation 11964.8
+Found phase-1 solution: relaxation 10979.2
+Found phase-1 solution: relaxation 10559.2
+Found phase-1 solution: relaxation 9645.87
+Found phase-1 solution: relaxation 9446.87
+Found phase-1 solution: relaxation 8612.75
+Found phase-1 solution: relaxation 8452.75
+Found phase-1 solution: relaxation 7981.25
+Found phase-1 solution: relaxation 7958.12
+Found phase-1 solution: relaxation 7139.25
+Found phase-1 solution: relaxation 6762.5
+Found phase-1 solution: relaxation 6708.88
+Found phase-1 solution: relaxation 6543.12
+Found phase-1 solution: relaxation 6098.75
+Found phase-1 solution: relaxation 6031.25
+Found phase-1 solution: relaxation 5850.5
+Found phase-1 solution: relaxation 5661.75
+Found phase-1 solution: relaxation 5617
+Elapsed time for NoRel heuristic: 5s (best bound 42.5709)
+Found phase-1 solution: relaxation 5434.88
+Found phase-1 solution: relaxation 5417.25
+Found phase-1 solution: relaxation 5373.62
+Found phase-1 solution: relaxation 5358.25
+Found phase-1 solution: relaxation 5270.88
+Found phase-1 solution: relaxation 5266.75
+Found phase-1 solution: relaxation 5025.88
+Found phase-1 solution: relaxation 4903.12
+Found phase-1 solution: relaxation 4890.62
+Found phase-1 solution: relaxation 4873.88
+Found phase-1 solution: relaxation 4837.38
+Found phase-1 solution: relaxation 4808.12
+Found phase-1 solution: relaxation 4755.88
+Found phase-1 solution: relaxation 4754.25
+Found phase-1 solution: relaxation 4749.5
+Found phase-1 solution: relaxation 4695.38
+Found phase-1 solution: relaxation 4668.38
+Found phase-1 solution: relaxation 4667.75
+Found phase-1 solution: relaxation 4603.62
+Found phase-1 solution: relaxation 4602
+Found phase-1 solution: relaxation 4554.75
+Found phase-1 solution: relaxation 4548.75
+Found phase-1 solution: relaxation 4541.75
+Found phase-1 solution: relaxation 4517
+Found phase-1 solution: relaxation 4515.5
+Found phase-1 solution: relaxation 4515.25
+Found phase-1 solution: relaxation 4509.62
+Found phase-1 solution: relaxation 4442.5
+Found phase-1 solution: relaxation 4423.5
+Found phase-1 solution: relaxation 4417.5
+Found phase-1 solution: relaxation 4406.12
+Found phase-1 solution: relaxation 4393.88
+Found phase-1 solution: relaxation 4380.25
+Found phase-1 solution: relaxation 4379.5
+Found phase-1 solution: relaxation 4377.62
+Found phase-1 solution: relaxation 4375.88
+Found phase-1 solution: relaxation 4374.12
+Found phase-1 solution: relaxation 4368.88
+Found phase-1 solution: relaxation 4361.5
+Found phase-1 solution: relaxation 4361.25
+Found phase-1 solution: relaxation 4361
+Found phase-1 solution: relaxation 4360.5
+Found phase-1 solution: relaxation 4360.25
+Found phase-1 solution: relaxation 4359
+Found phase-1 solution: relaxation 4357.25
+Found phase-1 solution: relaxation 4356.62
+Elapsed time for NoRel heuristic: 10s (best bound 42.5709)
+Found phase-1 solution: relaxation 4354.12
+Found phase-1 solution: relaxation 4354
+Found phase-1 solution: relaxation 4353.5
+Found phase-1 solution: relaxation 4352.5
+Found phase-1 solution: relaxation 4349.25
+Found phase-1 solution: relaxation 4348.25
+Found phase-1 solution: relaxation 4348
+Found phase-1 solution: relaxation 4347.5
+Found phase-1 solution: relaxation 4346.75
+Found phase-1 solution: relaxation 4346.5
+Found phase-1 solution: relaxation 4334.5
+Found phase-1 solution: relaxation 4054.25
+Found phase-1 solution: relaxation 3823.25
+Found phase-1 solution: relaxation 3804.25
+Found phase-1 solution: relaxation 3801.25
+Found phase-1 solution: relaxation 3734.25
+Found phase-1 solution: relaxation 3673.62
+Elapsed time for NoRel heuristic: 16s (best bound 42.5709)
+Found phase-1 solution: relaxation 3588.38
+Found phase-1 solution: relaxation 3549.5
+Found phase-1 solution: relaxation 3401.62
+Found phase-1 solution: relaxation 3331.38
+Found phase-1 solution: relaxation 3329.38
+Found phase-1 solution: relaxation 3328.38
+Found phase-1 solution: relaxation 3327.38
+Found phase-1 solution: relaxation 3325.38
+Found phase-1 solution: relaxation 3191.88
+NoRel heuristic complete
+Root relaxation presolve removed 3828 rows and 3828 columns
+Root relaxation presolved: 15686 rows, 146993 columns, 447707 nonzeros
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing primal log only...
+
+
+Root simplex log...
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    2.9739399e+02   6.100787e+03   6.364758e+10     20s
+   33085    4.2570925e+01   0.000000e+00   0.000000e+00     22s
+Concurrent spin time: 0.06s
+
+Solved with primal simplex
+   33085    4.2570925e+01   0.000000e+00   0.000000e+00     22s
+
+Root relaxation: objective 4.257092e+01, 33085 iterations, 1.82 seconds (2.27 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   42.57092    0 3819          -   42.57092      -     -   24s
+     0     0   48.04083    0 3990          -   48.04083      -     -   42s
+     0     0   48.04629    0 4131          -   48.04629      -     -   43s
+     0     0   48.04783    0 4190          -   48.04783      -     -   44s
+     0     0   48.04920    0 4196          -   48.04920      -     -   46s
+     0     0   48.04944    0 4211          -   48.04944      -     -   46s
+     0     0   48.35867    0 4191          -   48.35867      -     -   57s
+     0     0   48.44489    0 4286          -   48.44489      -     -   60s
+     0     0   48.45804    0 4334          -   48.45804      -     -   61s
+     0     0   48.47241    0 4417          -   48.47241      -     -   63s
+     0     0   48.49113    0 4514          -   48.49113      -     -   66s
+     0     0   48.49898    0 4549          -   48.49898      -     -   69s
+     0     0   48.50414    0 4639          -   48.50414      -     -   73s
+     0     0   48.50485    0 4665          -   48.50485      -     -   75s
+     0     0   48.50517    0 4676          -   48.50517      -     -   76s
+     0     0   49.25728    0 4621          -   49.25728      -     -   97s
+     0     0   49.43594    0 4757          -   49.43594      -     -  107s
+     0     0   49.47962    0 4847          -   49.47962      -     -  115s
+     0     0   49.49840    0 4901          -   49.49840      -     -  120s
+     0     0   49.51574    0 5000          -   49.51574      -     -  127s
+H    0     0                     163.8247583   49.51946  69.8%     -  132s
+     0     0   49.51946    0 5076  163.82476   49.51946  69.8%     -  132s
+     0     0   49.52730    0 5223  163.82476   49.52730  69.8%     -  138s
+     0     0   49.53033    0 5284  163.82476   49.53033  69.8%     -  144s
+     0     0   49.53103    0 5309  163.82476   49.53103  69.8%     -  148s
+H    0     0                     163.8035135   50.03787  69.5%     -  177s
+H    0     0                     163.7330668   50.03787  69.4%     -  177s
+H    0     0                     163.6811426   50.03787  69.4%     -  177s
+     0     0   50.03787    0 5291  163.68114   50.03787  69.4%     -  177s
+H    0     0                     163.6109800   50.26443  69.3%     -  192s
+     0     0   50.26443    0 5409  163.61098   50.26443  69.3%     -  192s
+H    0     0                     163.3578777   50.31536  69.2%     -  203s
+H    0     0                     163.3398276   50.31536  69.2%     -  203s
+     0     0   50.31536    0 5500  163.33983   50.31536  69.2%     -  203s
+H    0     0                     163.1360936   50.35282  69.1%     -  214s
+H    0     0                     163.1192246   50.35282  69.1%     -  214s
+H    0     0                     163.0320313   50.35282  69.1%     -  214s
+H    0     0                     162.9664754   50.35282  69.1%     -  214s
+H    0     0                     162.9299356   50.35282  69.1%     -  214s
+     0     0   50.35282    0 5577  162.92994   50.35282  69.1%     -  214s
+H    0     0                     162.8577161   50.36719  69.1%     -  226s
+H    0     0                     162.7665878   50.36719  69.1%     -  226s
+H    0     0                     162.7534997   50.36719  69.1%     -  226s
+     0     0   50.36719    0 5666  162.75350   50.36719  69.1%     -  226s
+H    0     0                     162.4231576   50.37797  69.0%     -  238s
+H    0     0                     162.3474861   50.37797  69.0%     -  238s
+H    0     0                     162.2713595   50.37797  69.0%     -  238s
+H    0     0                     162.2612472   50.37797  69.0%     -  238s
+     0     0   50.37797    0 5749  162.26125   50.37797  69.0%     -  238s
+     0     0   50.38574    0 5806  162.26125   50.38574  68.9%     -  249s
+     0     0   50.39036    0 5920  162.26125   50.39036  68.9%     -  258s
+     0     0   50.39223    0 6013  162.26125   50.39223  68.9%     -  268s
+     0     0   50.39271    0 6068  162.26125   50.39271  68.9%     -  273s
+H    0     0                     162.2244910   50.77593  68.7%     -  334s
+     0     0   50.77593    0 6070  162.22449   50.77593  68.7%     -  334s
+     0     0   51.00693    0 6138  162.22449   51.00693  68.6%     -  358s
+     0     0   51.05752    0 6302  162.22449   51.05752  68.5%     -  375s
+     0     0   51.09303    0 6425  162.22449   51.09303  68.5%     -  391s
+     0     0   51.11313    0 6488  162.22449   51.11313  68.5%     -  409s
+     0     0   51.13043    0 6642  162.22449   51.13043  68.5%     -  427s
+     0     0   51.13680    0 6781  162.22449   51.13680  68.5%     -  442s
+H    0     0                     162.2104042   51.13995  68.5%     -  459s
+     0     0   51.13995    0 6883  162.21040   51.13995  68.5%     -  459s
+     0     0   51.14075    0 6909  162.21040   51.14075  68.5%     -  470s
+     0     0   51.78424    0 6943  162.21040   51.78424  68.1%     -  591s
+H    0     0                     161.9586652   52.07575  67.8%     -  636s
+H    0     0                     161.6759546   52.07575  67.8%     -  636s
+H    0     0                     161.6581206   52.07575  67.8%     -  636s
+     0     0   52.07575    0 7030  161.65812   52.07575  67.8%     -  636s
+     0     0   52.39235    0 7250  161.65812   52.39235  67.6%     -  684s
+H    0     0                     161.2402058   52.47389  67.5%     -  725s
+H    0     0                     161.2294382   52.47389  67.5%     -  725s
+     0     0   52.47389    0 7487  161.22944   52.47389  67.5%     -  725s
+H    0     0                     161.2067937   52.56454  67.4%     -  778s
+H    0     0                     161.1312656   52.56454  67.4%     -  778s
+H    0     0                     161.1111745   52.56454  67.4%     -  778s
+H    0     0                     161.0929334   52.56454  67.4%     -  778s
+H    0     0                     161.0923464   52.56454  67.4%     -  778s
+H    0     0                     161.0906721   52.56454  67.4%     -  778s
+     0     0   52.56454    0 7762  161.09067   52.56454  67.4%     -  778s
+
+Interrupt request received
+     0     0          -    0       161.09067   52.56454  67.4%     -  784s
+
+Cutting planes:
+  Gomory: 375
+  Lift-and-project: 79
+  Cover: 316
+  Implied bound: 2
+  Clique: 1
+  MIR: 2003
+  StrongCG: 231
+  Flow cover: 589
+  GUB cover: 224
+  Zero half: 9
+  Relax-and-lift: 4
+
+Explored 1 nodes (481213 simplex iterations) in 784.94 seconds (874.00 work units)
+Thread count was 8 (of 8 available processors)
+
+Solution count 10: 161.091 161.092 161.093 ... 161.676
+
+Solve interrupted
+Best objective 1.610906721147e+02, best bound 5.256453592964e+01, gap 67.3696%
+

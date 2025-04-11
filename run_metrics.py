@@ -3,7 +3,7 @@ import sys
 import os
 
 DATA_PATH = "data"
-CASE_PATH = "casos/caso_1s2p"
+CASE_PATH = "casos/caso_2s1p"
 
 
 if __name__ == "__main__":
