@@ -91,10 +91,13 @@ def load_calendar_data(dir_name):
 
         # Previaturas
         prev_df = load_csv("previas")
-        P = [(str(row["uc"]), str(row["uc_requerida"]))  # Convertir a string
-             for _, row in prev_df.iterrows()
-             if str(row["uc"]) in C and str(row["uc_requerida"]) in C  # Convertir a string para comparación
-             and str(row["uc"]) != str(row["uc_requerida"])]
+        P = [
+            (str(row["uc"]), str(row["uc_requerida"]))  # Convertir a string
+            for _, row in prev_df.iterrows()
+            if str(row["uc"]) in C
+            and str(row["uc_requerida"]) in C  # Convertir a string para comparación
+            and str(row["uc"]) != str(row["uc_requerida"])
+        ]
 
         # Pares frecuentes
         PARES_UC = list(combinations(C, 2))
@@ -117,7 +120,9 @@ def load_calendar_data(dir_name):
         }
 
         # Factor de capacidad
-        fac_cp = float(load_csv("datos")["fac_cp"].iloc[0])
+        datos = load_csv("datos")
+        fac_cp = float(datos["fac_cp"].iloc[0])
+        alta_co = float(datos["alta_co"].iloc[0])
 
         # Inscriptos por UC
         ins_df = load_csv("inscriptos")
@@ -205,6 +210,7 @@ def load_calendar_data(dir_name):
             # Parámetros
             "cp": cp,
             "fac_cp": fac_cp,
+            "alta_co": alta_co,
             "ins": ins,
             "co": co,
             "dist_sem": dist_sem,

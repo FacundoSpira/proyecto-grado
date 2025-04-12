@@ -24,6 +24,7 @@ def solve_model(
     UC_MISMO_SEMESTRE = datos.get("UC_MISMO_SEMESTRE")
     cp = datos.get("cp")
     fac_cp = datos.get("fac_cp")
+    alta_co = datos.get("alta_co")
     ins = datos.get("ins")
     co = datos.get("co")
     dist_sem = datos.get("dist_sem")
@@ -168,7 +169,7 @@ def solve_model(
         )
 
         # Si dos cursos tienen alta coincidencia, deben asignarse al menos con una separacion de 2 dias.
-        if co[c1, c2] >= 60:
+        if co[c1, c2] >= alta_co:
             problem += (
                 z[c1, c2] >= 2,
                 f"Separacion_Minima_{c1}_{c2}",
