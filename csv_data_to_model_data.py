@@ -76,17 +76,18 @@ def load_calendar_data(dir_name):
         SUG = [
             (row["unidad_curricular"], row["semestre"], row["carrera"])
             for _, row in sug_df.iterrows()
-            if row["unidad_curricular"] in C  # Solo incluir si la UC existe en C
+            if str(row["unidad_curricular"]) in C  # Solo incluir si la UC existe en C
         ]
 
         # Pre-asignaciones
         pa_df = load_csv("preasignaciones")
         PA = {}
         for _, row in pa_df.iterrows():
-            unidad_curricular = row["unidad_curricular"]
+            unidad_curricular = str(row["unidad_curricular"])
             if unidad_curricular in C:  # Solo incluir si la UC existe en C
                 if unidad_curricular not in PA:
                     PA[unidad_curricular] = []
+
                 PA[unidad_curricular].append((row["dia"], row["turno"]))
 
         # Previaturas

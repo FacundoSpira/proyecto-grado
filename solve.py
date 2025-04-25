@@ -98,11 +98,11 @@ def solve_model(
     # Los cursos que tengan profesores coincidentes no pueden ser asignados el mismo turno
     for d in D:
         for t in Td[d]:
-                for c1, c2 in COP:
-                    problem += (
-                        x[c1, d, t] + x[c2, d, t] <= 1,
-                        f"No_Solapamiento_COP_{c1}_{c2}_Dia_{d}_Turno_{t}",
-                    )
+            for c1, c2 in COP:
+                problem += (
+                    x[c1, d, t] + x[c2, d, t] <= 1,
+                    f"No_Solapamiento_COP_{c1}_{c2}_Dia_{d}_Turno_{t}",
+                )
 
     # La evaluación de una UC se asigna a único día y turno:
     for c in C:
@@ -135,7 +135,7 @@ def solve_model(
                 f"Capacidad_{d}_{t}",
             )
 
-    # Las evaluaciones que se pre-asignan a un día y turno, se asignan en ese día y turno.
+    # Las evaluaciones que se pre-asignan a un conjunto de días y turnos, se asignan en alguno de ellos, y solo en uno.
     for c in PA.keys():
         problem += (pl.lpSum(x[c, d, t] for d, t in PA[c]) == 1, f"PreAsignacion_{c}")
 
