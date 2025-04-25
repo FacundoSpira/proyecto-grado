@@ -95,13 +95,14 @@ def solve_model(
 
     # region DEFINICIÓN DE LAS RESTRICCIONES
 
-    # Los cursos que tengan profesores coincidentes no pueden ser asignados el mismo dia
+    # Los cursos que tengan profesores coincidentes no pueden ser asignados el mismo turno
     for d in D:
-        for c1, c2 in COP:
-            problem += (
-                pl.lpSum(x[c1, d, t] + x[c2, d, t] for t in Td[d]) <= 1,
-                f"No_Solapamiento_COP_{c1}_{c2}_Dia_{d}",
-            )
+        for t in Td[d]:
+                for c1, c2 in COP:
+                    problem += (
+                        x[c1, d, t] + x[c2, d, t] <= 1,
+                        f"No_Solapamiento_COP_{c1}_{c2}_Dia_{d}_Turno_{t}",
+                    )
 
     # La evaluación de una UC se asigna a único día y turno:
     for c in C:
