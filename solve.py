@@ -195,7 +195,8 @@ def solve_model(
                     ("Heuristics", 0.5),  # Aumentar el esfuerzo heurístico
                     ("VarBranch", 3),  # Ramificación fuerte
                     ("NoRelHeurWork", 10),
-                    ("SolFiles", "solutions/solution"),
+                    # ("SolFiles", "solutions/test/solution"),
+                    # ("InputFile", "solutions/solution_99.sol"),
                 ],
             )
         case Solver.CPLEX_CMD:

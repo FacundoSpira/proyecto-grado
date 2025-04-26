@@ -2,6 +2,7 @@ from generate_schedule import generate_schedule_csv
 from metrics import generate_metrics
 import os
 
+
 class Variable:
     def __init__(self, name, value):
         self.name = name
@@ -9,6 +10,7 @@ class Variable:
 
     def value(self):
         return self._value
+
 
 # files = os.listdir("solutions")
 # files = [file for file in files if os.path.isfile(f"solutions/{file}")]
@@ -40,7 +42,7 @@ class Variable:
 # print(best_file)
 # print(best)
 
-with open(f"solutions/solution_79.sol", "r") as f:
+with open(f"solutions/test/solution_93.sol", "r") as f:
     lines = f.readlines()
 lines = [line.strip() for line in lines if line.startswith("x")]
 
